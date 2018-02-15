@@ -36,16 +36,16 @@ class LambdaStringTest {
     assertThat(methodRefName.toString()).isEqualTo(INJECTED_TO_STRING);
   }
 
-  // FIXME Not currently supported
-  // @Test
-  void staticLambdaBeforeAgent() throws Exception {
-    assertThat(STATIC_LAMBDA_BEFORE_AGENT.toString()).isEqualTo(INJECTED_TO_STRING);
+  @Test
+  void staticLambdaBeforeAgentAreNotSupported() throws Exception {
+    String expected = defaultToString(STATIC_LAMBDA_BEFORE_AGENT);
+    assertThat(STATIC_LAMBDA_BEFORE_AGENT.toString()).isEqualTo(expected);
   }
 
-  // FIXME Not currently supported
-  // @Test
-  void methodRefLambdaBeforeAgent() throws Exception {
-    assertThat(STATIC_METHOD_REF_BEFORE_AGENT.toString()).isEqualTo(INJECTED_TO_STRING);
+  @Test
+  void methodRefLambdaBeforeAgentAreNotSupported() throws Exception {
+    String expected = defaultToString(STATIC_METHOD_REF_BEFORE_AGENT);
+    assertThat(STATIC_METHOD_REF_BEFORE_AGENT.toString()).isEqualTo(expected);
   }
 
   @Test
@@ -56,6 +56,13 @@ class LambdaStringTest {
   @Test
   void methodRefLambdaAfterAgent() throws Exception {
     assertThat(STATIC_METHOD_REF_AFTER_AGENT.toString()).isEqualTo(INJECTED_TO_STRING);
+  }
+
+  /**
+   * Returns the original {@link Object#toString()} of the given object.
+   */
+  private static String defaultToString(Object object) {
+    return object.getClass().getName() + "@" + Integer.toHexString(object.hashCode());
   }
 
 
