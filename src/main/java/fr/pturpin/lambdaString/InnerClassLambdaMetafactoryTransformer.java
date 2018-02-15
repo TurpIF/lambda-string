@@ -29,10 +29,11 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
     private static final String INNER_CLASS_LAMBDA_METAFACTORY_NAME = "java/lang/invoke/InnerClassLambdaMetafactory";
 
-    private static final String CLASS_WRITER_NAME = Type.getInternalName(jdk.internal.org.objectweb.asm.ClassWriter.class);
-    private static final String CLASS_WRITER_DESC = Type.getDescriptor(jdk.internal.org.objectweb.asm.ClassWriter.class);
+    private static final String CLASS_WRITER_NAME = "jdk/internal/org/objectweb/asm/ClassWriter";
+    private static final String CLASS_WRITER_DESC = "Ljdk/internal/org/objectweb/asm/ClassWriter;";
+    private static final String METHOD_VISITOR_DESC = "Ljdk/internal/org/objectweb/asm/MethodVisitor;";
     private static final String CLASS_WRITER_VISIT_METHOD_DESC = Type.getMethodDescriptor(
-        Type.getType(jdk.internal.org.objectweb.asm.MethodVisitor.class),
+        Type.getType(METHOD_VISITOR_DESC),
         Type.getType(int.class),
         Type.getType(String.class),
         Type.getType(String.class),
