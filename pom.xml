@@ -33,6 +33,17 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm</artifactId>
+      <version>5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.ea.agentloader</groupId>
+      <artifactId>ea-agent-loader</artifactId>
+      <version>1.0.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <version>5.0.3</version>
