@@ -2,11 +2,21 @@ package fr.pturpin.lambdaString;
 
 import org.objectweb.asm.*;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
+import static java.util.Objects.requireNonNull;
+
 public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTransformer {
+
+    private final LambdaToStringStrategy toStringStrategy;
+
+    public InnerClassLambdaMetafactoryTransformer(LambdaToStringStrategy toStringStrategy) {
+        this.toStringStrategy = requireNonNull(toStringStrategy);
+    }
 
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
@@ -22,13 +32,19 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                         String desc,
                         String signature,
                         String[] exceptions) {
-                    return new InjectingToStringMethodVisitor(super.visitMethod(access,
+                    MethodVisitor mv = super.visitMethod(access,
                             name,
                             desc,
                             signature,
-                            exceptions));
+                            exceptions);
+                    return new InjectingToStringMethodVisitor(mv, toStringStrategy);
                 }
             }, 0);
+            try {
+                new FileOutputStream("D:\\tmp\\tmp.class").write(cw.toByteArray());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return cw.toByteArray();
         }
         return null;
@@ -51,8 +67,11 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
         private static final String TO_STRING_DESC = Type.getMethodDescriptor(Type.getType(String.class));
 
-        InjectingToStringMethodVisitor(MethodVisitor mv) {
+        private final LambdaToStringStrategy toStringStrategy;
+
+        InjectingToStringMethodVisitor(MethodVisitor mv, LambdaToStringStrategy toStringStrategy) {
             super(Opcodes.ASM5, mv);
+            this.toStringStrategy = requireNonNull(toStringStrategy);
         }
 
         @Override
@@ -84,9 +103,10 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                 metaMv.visitCode();
 
                 metaMv.visitTryCatchBlock(mmv -> {
-                    String transformerName = Type.getInternalName(InnerClassLambdaMetafactoryTransformer.class);
+                    String transformerName = Type.getInternalName(LambdaToStringLinker.class);
                     String lambdaToStringName = "lambdaToString";
-                    String lambdaToStringDesc = Type.getMethodDescriptor(Type.getType(String.class));
+                    String lambdaToStringDesc = Type.getMethodDescriptor(Type.getType(String.class), Type.getType(String.class));
+                    mmv.visitLdcInsn(toStringStrategy.getClass().getName());
                     mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
                             transformerName,
                             lambdaToStringName,
@@ -153,10 +173,4 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
         }
     }
 
-    /**
-     * Method injected in lambda as a <code>toString</code>
-     */
-    public static String lambdaToString() {
-        return "toto";
-    }
 }

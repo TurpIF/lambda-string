@@ -21,7 +21,7 @@ class LambdaStringTest {
     static void beforeAll() {
         STATIC_LAMBDA_BEFORE_AGENT = () -> {};
         STATIC_METHOD_REF_BEFORE_AGENT = LambdaStringTest::body;
-        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), "");
+        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), TestLambdaToStringStrategy.class.getName());
         STATIC_LAMBDA_AFTER_AGENT = () -> {};
         STATIC_METHOD_REF_AFTER_AGENT = LambdaStringTest::body;
     }
@@ -91,6 +91,13 @@ class LambdaStringTest {
     @FunctionalInterface
     private interface Lambda {
         void body();
+    }
+
+    private static final class TestLambdaToStringStrategy implements LambdaToStringStrategy {
+        @Override
+        public String createToString() {
+            return INJECTED_TO_STRING;
+        }
     }
 
 }
