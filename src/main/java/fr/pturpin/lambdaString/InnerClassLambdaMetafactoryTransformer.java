@@ -74,12 +74,23 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
         metaMv.visitCode();
 
-        metaMv.visitLdcInsn("toto");
+        String transformerName = Type.getInternalName(InnerClassLambdaMetafactoryTransformer.class);
+        String lambdaToStringName = "lambdaToString";
+        String lambdaToStringDesc = Type.getMethodDescriptor(Type.getType(String.class));
+        metaMv.visitMethodInsn(Opcodes.INVOKESTATIC, transformerName, lambdaToStringName, lambdaToStringDesc, true);
+
         metaMv.visitInsn(Opcodes.ARETURN);
 
         metaMv.visitMaxs(-1, -1); // Maxs computed by ClassWriter.COMPUTE_FRAMES, these arguments ignored
         metaMv.visitEnd();
       }
     }
+  }
+
+  /**
+   * Method injected in lambda as a <code>toString</code>
+   */
+  public static String lambdaToString() {
+    return "toto";
   }
 }
