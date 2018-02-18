@@ -74,12 +74,49 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
         metaMv.visitCode();
 
-        String transformerName = Type.getInternalName(InnerClassLambdaMetafactoryTransformer.class);
-        String lambdaToStringName = "lambdaToString";
-        String lambdaToStringDesc = Type.getMethodDescriptor(Type.getType(String.class));
-        metaMv.visitMethodInsn(Opcodes.INVOKESTATIC, transformerName, lambdaToStringName, lambdaToStringDesc, true);
+        metaMv.visitTryCatchBlock(mmv -> {
+          String transformerName = Type.getInternalName(InnerClassLambdaMetafactoryTransformer.class);
+          String lambdaToStringName = "lambdaToString";
+          String lambdaToStringDesc = Type.getMethodDescriptor(Type.getType(String.class));
+          mmv.visitMethodInsn(Opcodes.INVOKESTATIC, transformerName, lambdaToStringName, lambdaToStringDesc, false);
+        }, mmv -> {
+          mmv.visitInsn(Opcodes.ARETURN);
+        }, mmv -> {
+          // Original Object#toString:
+          // return getClass().getName() + "@" + Integer.toHexString(hashCode());
 
-        metaMv.visitInsn(Opcodes.ARETURN);
+          mmv.visitTypeInsn(Opcodes.NEW, "java/lang/StringBuilder");
+          mmv.visitInsn(Opcodes.DUP);
+          mmv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
+
+          mmv.visitVarInsn(Opcodes.ALOAD, 0);
+          mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false);
+          mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;", false);
+          mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+              "java/lang/StringBuilder",
+              "append",
+              "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+              false);
+
+          mmv.visitLdcInsn("@");
+          mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+              "java/lang/StringBuilder",
+              "append",
+              "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+              false);
+
+          mmv.visitVarInsn(Opcodes.ALOAD, 0);
+          mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "hashCode", "()I", false);
+          mmv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Integer", "toHexString", "(I)Ljava/lang/String;", false);
+          mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+              "java/lang/StringBuilder",
+              "append",
+              "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+              false);
+
+          mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
+          mmv.visitInsn(Opcodes.ARETURN);
+        }, Type.getInternalName(Throwable.class));
 
         metaMv.visitMaxs(-1, -1); // Maxs computed by ClassWriter.COMPUTE_FRAMES, these arguments ignored
         metaMv.visitEnd();

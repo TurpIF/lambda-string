@@ -55,9 +55,9 @@ public final class MetaMethodVisitor extends MethodVisitor {
     dup();
     push(type);
     push(nLocal);
-    push(local, "java/local/Object");
+    push(local, "java/lang/Object");
     push(nStack);
-    push(stack, "java/local/Object");
+    push(stack, "java/lang/Object");
     invoke("visitFrame", "(II[Ljava/lang/Object;I[Ljava/lang/Object;)V");
   }
 
@@ -200,30 +200,31 @@ public final class MetaMethodVisitor extends MethodVisitor {
   }
 
   public void visitTryCatchBlock(Consumer<MetaMethodVisitor> tryBlock, Consumer<MetaMethodVisitor> endTryBlock, Consumer<MetaMethodVisitor> catchBlock, String type) {
-    mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Label");
-    mv.visitInsn(Opcodes.DUP);
-    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "jdk/internal/org/objectweb/asm/Label", "<init>", "()V", false);
+    Runnable newLabel = () -> {
+      mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Label");
+      mv.visitInsn(Opcodes.DUP);
+      mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "jdk/internal/org/objectweb/asm/Label", "<init>", "()V", false);
+    };
+
+    newLabel.run();
     mv.visitVarInsn(Opcodes.ASTORE, 1);
 
-    mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Label");
-    mv.visitInsn(Opcodes.DUP);
-    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "jdk/internal/org/objectweb/asm/Label", "<init>", "()V", false);
+    newLabel.run();
     mv.visitVarInsn(Opcodes.ASTORE, 2);
 
-    mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Label");
-    mv.visitInsn(Opcodes.DUP);
-    mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "jdk/internal/org/objectweb/asm/Label", "<init>", "()V", false);
+    newLabel.run();
     mv.visitVarInsn(Opcodes.ASTORE, 3);
 
+    dup();
     mv.visitVarInsn(Opcodes.ALOAD, 1);
     mv.visitVarInsn(Opcodes.ALOAD, 2);
     mv.visitVarInsn(Opcodes.ALOAD, 3);
     push(type);
     invoke("visitTryCatchBlock",
-        "(Ljdk/internal/org/objectweb/asm/Label;" +
-            "Ljdk/internal/org/objectweb/asm/Label;" +
-            "Ljdk/internal/org/objectweb/asm/Label;" +
-            "Ljava/lang/String;)V");
+    "(Ljdk/internal/org/objectweb/asm/Label;" +
+        "Ljdk/internal/org/objectweb/asm/Label;" +
+        "Ljdk/internal/org/objectweb/asm/Label;" +
+        "Ljava/lang/String;)V");
 
     dup();
     mv.visitVarInsn(Opcodes.ALOAD, 1);
@@ -242,12 +243,7 @@ public final class MetaMethodVisitor extends MethodVisitor {
     invoke("visitLabel", "(Ljdk/internal/org/objectweb/asm/Label;)V");
 
     // stack
-    push(Opcodes.F_SAME1);
-    push(0);
-    push(null);
-    push(1);
-    push(new Object[] { type }, "java/lang/Object");
-    invoke("visitFrame", "(I[Ljava/lang/Object;I[Ljava/lang/Object;)V");
+    visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] { type });
 
     catchBlock.accept(this);
   }

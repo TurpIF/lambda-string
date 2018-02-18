@@ -4,6 +4,8 @@ import com.ea.agentloader.AgentLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.function.Function;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LambdaStringTest {
@@ -22,6 +24,16 @@ class LambdaStringTest {
     AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), "");
     STATIC_LAMBDA_AFTER_AGENT = () -> {};
     STATIC_METHOD_REF_AFTER_AGENT = LambdaStringTest::body;
+  }
+
+  @Test
+  void classLoadedFromBootstrapClassLoaderAreNotSupported() throws Exception {
+    assertThat(Function.class.getClassLoader())
+        .as("%s is loaded by the bootstrap class loader", Function.class)
+        .isNull();
+
+    String expected = defaultToString(Function.identity());
+    assertThat(Function.identity().toString()).isEqualTo(expected);
   }
 
   @Test

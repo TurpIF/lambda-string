@@ -8,6 +8,13 @@ import java.lang.instrument.Instrumentation;
  * <p>
  * If this agent is dynamically set up during runtime, already created lambdas are not modified and keep their
  * default <code>toString</code>.
+ * </p><p>
+ * Lambda in classes loaded during bootstrap class loader are not supported except if this agent classes are included
+ * in the bootstrap classpath via <code>-Xbootclasspath/p:&lt;path/to/agent/jar&gt;</code>.<br />
+ * If this property is not set, then the explicit {@link Object#toString()} implementation is injected in all lambdas
+ * <code>toString</code> from bootstrap. This explicit implementation is:<br />
+ * <code>return getClass().getName() + "@" Integer.toHexString(hashCode());</code>
+ * </p>
  */
 public final class LambdaToStringAgent {
   public static void agentmain(String agentArgs, Instrumentation inst) {
