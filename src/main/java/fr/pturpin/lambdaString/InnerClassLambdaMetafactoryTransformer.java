@@ -2,8 +2,6 @@ package fr.pturpin.lambdaString;
 
 import org.objectweb.asm.*;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
@@ -40,11 +38,6 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                     return new InjectingToStringMethodVisitor(mv, toStringStrategy);
                 }
             }, 0);
-            try {
-                new FileOutputStream("D:\\tmp\\tmp.class").write(cw.toByteArray());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
             return cw.toByteArray();
         }
         return null;
