@@ -90,6 +90,7 @@ class LambdaStringTest {
      */
     @FunctionalInterface
     private interface Lambda {
+        @SuppressWarnings("unused")
         void body();
     }
 

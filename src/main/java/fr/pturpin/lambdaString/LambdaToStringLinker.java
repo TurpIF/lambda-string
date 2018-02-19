@@ -11,6 +11,7 @@ public final class LambdaToStringLinker {
     /**
      * Method injected in lambda as a <code>toString</code>
      */
+    @SuppressWarnings("unused")
     public static String lambdaToString(String strategyClassName) throws BootstrapMethodError {
         return linkStrategy(strategyClassName).createToString();
     }
@@ -20,16 +21,22 @@ public final class LambdaToStringLinker {
             try {
                 return createStrategy(name);
             } catch (ReflectiveOperationException e) {
-                throw new RuntimeException(e);
+                throw new BootstrapMethodError(e);
             }
         });
     }
 
     private static LambdaToStringStrategy createStrategy(String strategyClassName) throws
             ReflectiveOperationException {
-        ClassLoader classLoader = InnerClassLambdaMetafactoryTransformer.class.getClassLoader();
-        Class<LambdaToStringStrategy> klass = (Class) classLoader.loadClass(strategyClassName);
-        Constructor<LambdaToStringStrategy> constructor = klass.getDeclaredConstructor();
+        ClassLoader classLoader = LambdaToStringLinker.class.getClassLoader();
+
+        Class<?> klass = classLoader.loadClass(strategyClassName);
+        if (!LambdaToStringStrategy.class.isAssignableFrom(klass)) {
+            throw new ReflectiveOperationException(LambdaToStringStrategy.class + " is not assignable from given class " + klass);
+        }
+        @SuppressWarnings("unchecked") Class<LambdaToStringStrategy> castKlass = (Class<LambdaToStringStrategy>) klass;
+
+        Constructor<LambdaToStringStrategy> constructor = castKlass.getDeclaredConstructor();
         try {
             constructor.setAccessible(true);
         } catch (SecurityException e) {

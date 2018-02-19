@@ -3,7 +3,6 @@ package fr.pturpin.lambdaString;
 import org.objectweb.asm.*;
 
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 import static java.util.Objects.requireNonNull;
@@ -12,13 +11,13 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
     private final LambdaToStringStrategy toStringStrategy;
 
-    public InnerClassLambdaMetafactoryTransformer(LambdaToStringStrategy toStringStrategy) {
+    InnerClassLambdaMetafactoryTransformer(LambdaToStringStrategy toStringStrategy) {
         this.toStringStrategy = requireNonNull(toStringStrategy);
     }
 
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
-            ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
+            ProtectionDomain protectionDomain, byte[] classfileBuffer) {
         if (className.equals("java/lang/invoke/InnerClassLambdaMetafactory")) {
             ClassReader cr = new ClassReader(classfileBuffer);
             ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_FRAMES);
