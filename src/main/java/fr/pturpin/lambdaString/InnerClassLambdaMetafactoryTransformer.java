@@ -18,7 +18,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-        if (className.equals("java/lang/invoke/InnerClassLambdaMetafactory")) {
+        if (className.equals(InjectingToStringMethodVisitor.INNER_CLASS_LAMBDA_METAFACTORY_NAME)) {
             ClassReader cr = new ClassReader(classfileBuffer);
             ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_FRAMES);
             cr.accept(new ClassVisitor(Opcodes.ASM5, cw) {
@@ -48,6 +48,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
         private static final String CLASS_WRITER_NAME = "jdk/internal/org/objectweb/asm/ClassWriter";
         private static final String CLASS_WRITER_DESC = "Ljdk/internal/org/objectweb/asm/ClassWriter;";
+
         private static final String METHOD_VISITOR_DESC = "Ljdk/internal/org/objectweb/asm/MethodVisitor;";
         private static final String CLASS_WRITER_VISIT_METHOD_DESC = Type.getMethodDescriptor(
                 Type.getType(METHOD_VISITOR_DESC),
@@ -56,6 +57,12 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                 Type.getType(String.class),
                 Type.getType(String.class),
                 Type.getType(String[].class));
+
+        private static final String ANNOTATION_VISITOR_DESC = "Ljdk/internal/org/objectweb/asm/AnnotationVisitor;";
+        private static final String CLASS_WRITER_VISIT_ANNOTATION_DESC = Type.getMethodDescriptor(
+                Type.getType(ANNOTATION_VISITOR_DESC),
+                Type.getType(String.class),
+                Type.getType(boolean.class));
 
         private static final String TO_STRING_DESC = Type.getMethodDescriptor(Type.getType(String.class));
 
@@ -78,91 +85,136 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                         INNER_CLASS_LAMBDA_METAFACTORY_NAME,
                         "cw",
                         CLASS_WRITER_DESC);
+                mv.visitInsn(Opcodes.DUP);
 
-                // MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "test", "()Ljava/lang/String;", null, null);
-                mv.visitInsn(Opcodes.ICONST_1);
-                mv.visitLdcInsn("toString");
-                mv.visitLdcInsn(TO_STRING_DESC);
-                mv.visitInsn(Opcodes.ACONST_NULL);
-                mv.visitInsn(Opcodes.ACONST_NULL);
-                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                        CLASS_WRITER_NAME,
-                        "visitMethod",
-                        CLASS_WRITER_VISIT_METHOD_DESC,
+                visitToString();
+
+                // Inject an annotation because, it's not possible to push Class object from lambda metafactory
+                // stack to lambda stack.
+                visitMetaInfo();
+            }
+        }
+
+        private void visitToString() {
+            // MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null);
+            mv.visitInsn(Opcodes.ICONST_1);
+            mv.visitLdcInsn("toString");
+            mv.visitLdcInsn(TO_STRING_DESC);
+            mv.visitInsn(Opcodes.ACONST_NULL);
+            mv.visitInsn(Opcodes.ACONST_NULL);
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    CLASS_WRITER_NAME,
+                    "visitMethod",
+                    CLASS_WRITER_VISIT_METHOD_DESC,
+                    false);
+
+            MetaMethodVisitor mmv = new MetaMethodVisitor(api, mv);
+
+            mmv.visitCode();
+
+            mmv.visitTryCatchBlock(() -> {
+                // LambdaToStringLinker.lambdaToString(toStringStrategyClassName, this);
+
+                mmv.visitLdcInsn(toStringStrategyClassName);
+                mmv.visitVarInsn(Opcodes.ALOAD, 0);
+
+                String transformerName = Type.getInternalName(LambdaToStringLinker.class);
+                String lambdaToStringName = "lambdaToString";
+                String lambdaToStringDesc = Type.getMethodDescriptor(Type.getType(String.class),
+                        Type.getType(String.class),
+                        Type.getType(Object.class));
+                mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                        transformerName,
+                        lambdaToStringName,
+                        lambdaToStringDesc,
+                        false);
+            }, () -> {
+                mmv.visitInsn(Opcodes.ARETURN);
+            }, () -> {
+                // Original Object#toString:
+                // return getClass().getName() + "@" + Integer.toHexString(hashCode());
+
+                mmv.visitTypeInsn(Opcodes.NEW, "java/lang/StringBuilder");
+                mmv.visitInsn(Opcodes.DUP);
+                mmv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
+
+                mmv.visitVarInsn(Opcodes.ALOAD, 0);
+                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/Object",
+                        "getClass",
+                        "()Ljava/lang/Class;",
+                        false);
+                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/Class",
+                        "getName",
+                        "()Ljava/lang/String;",
+                        false);
+                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/StringBuilder",
+                        "append",
+                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
                         false);
 
-                MetaMethodVisitor metaMv = new MetaMethodVisitor(api, mv);
+                mmv.visitLdcInsn("@");
+                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/StringBuilder",
+                        "append",
+                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+                        false);
 
-                metaMv.visitCode();
+                mmv.visitVarInsn(Opcodes.ALOAD, 0);
+                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "hashCode", "()I", false);
+                mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                        "java/lang/Integer",
+                        "toHexString",
+                        "(I)Ljava/lang/String;",
+                        false);
+                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/StringBuilder",
+                        "append",
+                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+                        false);
 
-                metaMv.visitTryCatchBlock(mmv -> {
-                    String transformerName = Type.getInternalName(LambdaToStringLinker.class);
-                    String lambdaToStringName = "lambdaToString";
-                    String lambdaToStringDesc = Type.getMethodDescriptor(Type.getType(String.class), Type.getType(String.class));
-                    mmv.visitLdcInsn(toStringStrategyClassName);
-                    mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                            transformerName,
-                            lambdaToStringName,
-                            lambdaToStringDesc,
-                            false);
-                }, mmv -> {
-                    mmv.visitInsn(Opcodes.ARETURN);
-                }, mmv -> {
-                    // Original Object#toString:
-                    // return getClass().getName() + "@" + Integer.toHexString(hashCode());
+                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/StringBuilder",
+                        "toString",
+                        "()Ljava/lang/String;",
+                        false);
+                mmv.visitInsn(Opcodes.ARETURN);
+            }, Type.getInternalName(Throwable.class));
 
-                    mmv.visitTypeInsn(Opcodes.NEW, "java/lang/StringBuilder");
-                    mmv.visitInsn(Opcodes.DUP);
-                    mmv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
+            mmv.visitMaxs(-1, -1); // Maxs computed by ClassWriter.COMPUTE_FRAMES, these arguments ignored
+            mmv.visitEnd();
+        }
 
-                    mmv.visitVarInsn(Opcodes.ALOAD, 0);
-                    mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                            "java/lang/Object",
-                            "getClass",
-                            "()Ljava/lang/Class;",
-                            false);
-                    mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                            "java/lang/Class",
-                            "getName",
-                            "()Ljava/lang/String;",
-                            false);
-                    mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                            "java/lang/StringBuilder",
-                            "append",
-                            "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
-                            false);
+        private void visitMetaInfo() {
+            // AnnotationVisitor av = cw.visitAnnotation("fr/pturpin/lambdaString/LambdaMetaInfo", true);
+            mv.visitLdcInsn(Type.getDescriptor(LambdaMetaInfo.class));
+            mv.visitInsn(Opcodes.ICONST_1);
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    CLASS_WRITER_NAME,
+                    "visitAnnotation",
+                    CLASS_WRITER_VISIT_ANNOTATION_DESC,
+                    false);
 
-                    mmv.visitLdcInsn("@");
-                    mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                            "java/lang/StringBuilder",
-                            "append",
-                            "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
-                            false);
+            MetaAnnotationVisitor mav = new MetaAnnotationVisitor(api, mv);
 
-                    mmv.visitVarInsn(Opcodes.ALOAD, 0);
-                    mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "hashCode", "()I", false);
-                    mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                            "java/lang/Integer",
-                            "toHexString",
-                            "(I)Ljava/lang/String;",
-                            false);
-                    mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                            "java/lang/StringBuilder",
-                            "append",
-                            "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
-                            false);
+            mav.visit("targetClass", () -> {
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitFieldInsn(Opcodes.GETFIELD,
+                        //"java/lang/invoke/AbstractValidatingLambdaMetafactory",
+                        INNER_CLASS_LAMBDA_METAFACTORY_NAME,
+                        "targetClass",
+                        "Ljava/lang/Class;");
 
-                    mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                            "java/lang/StringBuilder",
-                            "toString",
-                            "()Ljava/lang/String;",
-                            false);
-                    mmv.visitInsn(Opcodes.ARETURN);
-                }, Type.getInternalName(Throwable.class));
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                        "jdk/internal/org/objectweb/asm/Type",
+                        "getType",
+                        "(Ljava/lang/Class;)Ljdk/internal/org/objectweb/asm/Type;",
+                        false);
+            });
 
-                metaMv.visitMaxs(-1, -1); // Maxs computed by ClassWriter.COMPUTE_FRAMES, these arguments ignored
-                metaMv.visitEnd();
-            }
+            mav.visitEnd();
         }
     }
 

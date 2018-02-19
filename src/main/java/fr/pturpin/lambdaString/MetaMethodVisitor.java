@@ -3,7 +3,6 @@ package fr.pturpin.lambdaString;
 import org.objectweb.asm.*;
 
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public final class MetaMethodVisitor extends MethodVisitor {
 
@@ -36,7 +35,6 @@ public final class MetaMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitEnd() {
-        dup();
         invoke("visitEnd", "()V");
     }
 
@@ -114,8 +112,18 @@ public final class MetaMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitLdcInsn(Object cst) {
+        visitLdcInsn(() -> push(cst));
+    }
+
+    /**
+     * Make the internal {@link MethodVisitor} write a <code>visitLdcInsn</code>.
+     * The pushed object is injected by the given <code>pusher</code>.
+     *
+     * @param pusher runnable injecting the pushed constant in the internal stack.
+     */
+    public void visitLdcInsn(Runnable pusher) {
         dup();
-        push(cst);
+        pusher.run();
         invoke("visitLdcInsn", "(Ljava/lang/Object;)V");
     }
 
@@ -207,9 +215,9 @@ public final class MetaMethodVisitor extends MethodVisitor {
     }
 
     public void visitTryCatchBlock(
-            Consumer<MetaMethodVisitor> tryBlock,
-            Consumer<MetaMethodVisitor> endTryBlock,
-            Consumer<MetaMethodVisitor> catchBlock,
+            Runnable tryBlock,
+            Runnable endTryBlock,
+            Runnable catchBlock,
             String type) {
         Runnable newLabel = () -> {
             mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Label");
@@ -241,13 +249,13 @@ public final class MetaMethodVisitor extends MethodVisitor {
         mv.visitVarInsn(Opcodes.ALOAD, 1);
         invoke("visitLabel", "(Ljdk/internal/org/objectweb/asm/Label;)V");
 
-        tryBlock.accept(this);
+        tryBlock.run();
 
         dup();
         mv.visitVarInsn(Opcodes.ALOAD, 2);
         invoke("visitLabel", "(Ljdk/internal/org/objectweb/asm/Label;)V");
 
-        endTryBlock.accept(this);
+        endTryBlock.run();
 
         dup();
         mv.visitVarInsn(Opcodes.ALOAD, 3);
@@ -256,7 +264,7 @@ public final class MetaMethodVisitor extends MethodVisitor {
         // stack
         visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] { type });
 
-        catchBlock.accept(this);
+        catchBlock.run();
     }
 
     @Override
@@ -280,19 +288,19 @@ public final class MetaMethodVisitor extends MethodVisitor {
         invoke("visitVarInsn", "(II)V");
     }
 
-    private void invoke(String name, String desc) {
+    public void invoke(String name, String desc) {
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, NAME_METHOD_VISITOR, name, desc, false);
     }
 
-    private void dup() {
+    public void dup() {
         mv.visitInsn(Opcodes.DUP);
     }
 
-    private void push(boolean bool) {
+    public void push(boolean bool) {
         push(bool ? 1 : 0);
     }
 
-    private void push(int n) {
+    public void push(int n) {
         if (n >= -1 && n <= 5) {
             mv.visitInsn(Opcodes.ICONST_0 + n);
         } else if (n >= Byte.MIN_VALUE && n <= Byte.MAX_VALUE) {
@@ -304,7 +312,7 @@ public final class MetaMethodVisitor extends MethodVisitor {
         }
     }
 
-    private void push(Object cst) {
+    public void push(Object cst) {
         if (cst == null) {
             mv.visitInsn(Opcodes.ACONST_NULL);
         } else {
@@ -312,7 +320,7 @@ public final class MetaMethodVisitor extends MethodVisitor {
         }
     }
 
-    private void push(Object[] array, String name) {
+    public void push(Object[] array, String name) {
         if (array == null) {
             mv.visitInsn(Opcodes.ACONST_NULL);
         } else {

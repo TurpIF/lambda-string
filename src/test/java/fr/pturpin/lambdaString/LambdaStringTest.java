@@ -81,7 +81,7 @@ class LambdaStringTest {
     /**
      * Dummy method whose reference match the {@link Lambda} interface
      */
-    private static void body() {
+    static void body() {
         // nothing
     }
 
@@ -89,14 +89,14 @@ class LambdaStringTest {
      * Dummy functional interface to work on in tests
      */
     @FunctionalInterface
-    private interface Lambda {
+    interface Lambda {
         @SuppressWarnings("unused")
         void body();
     }
 
-    private static final class TestLambdaToStringStrategy implements LambdaToStringStrategy {
+    static final class TestLambdaToStringStrategy implements LambdaToStringStrategy {
         @Override
-        public String createToString() {
+        public String createToString(Object lambda) {
             return INJECTED_TO_STRING;
         }
     }

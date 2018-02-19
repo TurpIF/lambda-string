@@ -5,5 +5,5 @@ package fr.pturpin.lambdaString;
  */
 @FunctionalInterface
 public interface LambdaToStringStrategy {
-    String createToString();
+    String createToString(Object lambda);
 }

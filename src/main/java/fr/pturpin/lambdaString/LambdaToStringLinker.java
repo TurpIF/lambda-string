@@ -7,13 +7,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class LambdaToStringLinker {
 
     private static final Map<String, LambdaToStringStrategy> LINKED_STRATEGY = new ConcurrentHashMap<>();
-
     /**
      * Method injected in lambda as a <code>toString</code>
      */
     @SuppressWarnings("unused")
-    public static String lambdaToString(String strategyClassName) throws BootstrapMethodError {
-        return linkStrategy(strategyClassName).createToString();
+    public static String lambdaToString(String strategyClassName, Object lambda) throws BootstrapMethodError {
+        return linkStrategy(strategyClassName).createToString(lambda);
     }
 
     static LambdaToStringStrategy linkStrategy(String strategyClassName) throws BootstrapMethodError {
