@@ -34,8 +34,7 @@ public final class LambdaToStringAgent {
             return;
         }
 
-        LambdaToStringStrategy toStringStrategy = LambdaToStringLinker.linkStrategy(agentArgs);
-        inst.addTransformer(new InnerClassLambdaMetafactoryTransformer(toStringStrategy), true);
+        inst.addTransformer(new InnerClassLambdaMetafactoryTransformer(agentArgs), true);
         try {
             inst.retransformClasses(Class.forName("java.lang.invoke.InnerClassLambdaMetafactory"));
             // Impossible to retransform the already created lambda classes.

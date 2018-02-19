@@ -9,10 +9,10 @@ import static java.util.Objects.requireNonNull;
 
 public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTransformer {
 
-    private final LambdaToStringStrategy toStringStrategy;
+    private final String toStringStrategyClassName;
 
-    InnerClassLambdaMetafactoryTransformer(LambdaToStringStrategy toStringStrategy) {
-        this.toStringStrategy = requireNonNull(toStringStrategy);
+    InnerClassLambdaMetafactoryTransformer(String toStringStrategyClassName) {
+        this.toStringStrategyClassName = requireNonNull(toStringStrategyClassName);
     }
 
     @Override
@@ -34,7 +34,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                             desc,
                             signature,
                             exceptions);
-                    return new InjectingToStringMethodVisitor(mv, toStringStrategy);
+                    return new InjectingToStringMethodVisitor(mv, toStringStrategyClassName);
                 }
             }, 0);
             return cw.toByteArray();
@@ -59,11 +59,12 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
         private static final String TO_STRING_DESC = Type.getMethodDescriptor(Type.getType(String.class));
 
-        private final LambdaToStringStrategy toStringStrategy;
+        private final String toStringStrategyClassName;
 
-        InjectingToStringMethodVisitor(MethodVisitor mv, LambdaToStringStrategy toStringStrategy) {
+        InjectingToStringMethodVisitor(MethodVisitor mv, String toStringStrategyClassName) {
             super(Opcodes.ASM5, mv);
-            this.toStringStrategy = requireNonNull(toStringStrategy);
+            this.toStringStrategyClassName = requireNonNull(toStringStrategyClassName);
+            LambdaToStringLinker.linkStrategy(toStringStrategyClassName); // Check validity
         }
 
         @Override
@@ -98,7 +99,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                     String transformerName = Type.getInternalName(LambdaToStringLinker.class);
                     String lambdaToStringName = "lambdaToString";
                     String lambdaToStringDesc = Type.getMethodDescriptor(Type.getType(String.class), Type.getType(String.class));
-                    mmv.visitLdcInsn(toStringStrategy.getClass().getName());
+                    mmv.visitLdcInsn(toStringStrategyClassName);
                     mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
                             transformerName,
                             lambdaToStringName,
