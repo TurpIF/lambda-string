@@ -1,6 +1,7 @@
 package fr.pturpin.lambdaString;
 
 import java.lang.instrument.Instrumentation;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Agent transforming the {@link java.lang.invoke.InnerClassLambdaMetafactory} class to inject a custom
@@ -22,9 +23,14 @@ import java.lang.instrument.Instrumentation;
  * If this property is not set, then the explicit {@link Object#toString()} implementation is injected in all lambdas
  * <code>toString</code> from bootstrap. This explicit implementation is:<br />
  * <code>return getClass().getName() + "@" Integer.toHexString(hashCode());</code>
+ * </p><p>
+ * This agent is runnable only once in the same JVM. A {@link IllegalStateException} is thrown in case of multiple run.
  * </p>
  */
 public final class LambdaToStringAgent {
+
+    private static final AtomicReference<String> initializedArgs = new AtomicReference<>(null);
+
     public static void agentmain(String agentArgs, Instrumentation inst) {
         premain(agentArgs, inst);
     }
@@ -32,6 +38,15 @@ public final class LambdaToStringAgent {
     public static void premain(String agentArgs, Instrumentation inst) {
         if (agentArgs == null || agentArgs.isEmpty()) {
             return;
+        }
+
+        if (!initializedArgs.compareAndSet(null, agentArgs)) {
+            String args = initializedArgs.get();
+            if (args.equals(agentArgs)) {
+                // Already initialized with same args
+                return;
+            }
+            throw new IllegalStateException("This agent is runnable only once but was already ran with " + args + " as argument.");
         }
 
         inst.addTransformer(new InnerClassLambdaMetafactoryTransformer(agentArgs), true);
