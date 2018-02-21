@@ -3,6 +3,7 @@ package fr.pturpin.lambdaString;
 import org.objectweb.asm.*;
 
 import java.lang.instrument.ClassFileTransformer;
+import java.lang.invoke.MethodType;
 import java.security.ProtectionDomain;
 
 import static java.util.Objects.requireNonNull;
@@ -58,13 +59,8 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                 Type.getType(String.class),
                 Type.getType(String[].class));
 
-        private static final String ANNOTATION_VISITOR_DESC = "Ljdk/internal/org/objectweb/asm/AnnotationVisitor;";
-        private static final String CLASS_WRITER_VISIT_ANNOTATION_DESC = Type.getMethodDescriptor(
-                Type.getType(ANNOTATION_VISITOR_DESC),
-                Type.getType(String.class),
-                Type.getType(boolean.class));
-
         private static final String TO_STRING_DESC = Type.getMethodDescriptor(Type.getType(String.class));
+        private static final String LAMBDA_META_INFO_NAME = Type.getInternalName(LambdaMetaInfo.class);
 
         private final String toStringStrategyClassName;
 
@@ -88,10 +84,6 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                 mv.visitInsn(Opcodes.DUP);
 
                 visitToString();
-
-                // Inject an annotation because, it's not possible to push Class object from lambda metafactory
-                // stack to lambda stack.
-                visitMetaInfo();
             }
         }
 
@@ -113,16 +105,37 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
             mmv.visitCode();
 
             mmv.visitTryCatchBlock(() -> {
-                // LambdaToStringLinker.lambdaToString(toStringStrategyClassName, this);
+                // LambdaToStringLinker.lambdaToString(toStringStrategyClassName, this, new LambdaMetaInfo(targetClass));
 
                 mmv.visitLdcInsn(toStringStrategyClassName);
                 mmv.visitVarInsn(Opcodes.ALOAD, 0);
 
+                mmv.visitTypeInsn(Opcodes.NEW, LAMBDA_META_INFO_NAME);
+                mmv.visitInsn(Opcodes.DUP);
+                mmv.visitLdcInsn(() -> {
+                    // targetClass
+                    mv.visitVarInsn(Opcodes.ALOAD, 0);
+                    mv.visitFieldInsn(Opcodes.GETFIELD,
+                            INNER_CLASS_LAMBDA_METAFACTORY_NAME,
+                            "targetClass",
+                            "Ljava/lang/Class;");
+                    mv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                            "jdk/internal/org/objectweb/asm/Type",
+                            "getType",
+                            "(Ljava/lang/Class;)Ljdk/internal/org/objectweb/asm/Type;",
+                            false);
+                });
+                mmv.visitMethodInsn(Opcodes.INVOKESPECIAL,
+                        LAMBDA_META_INFO_NAME,
+                        "<init>",
+                        "(Ljava/lang/Class;)V",
+                        false);
+
                 String transformerName = Type.getInternalName(LambdaToStringLinker.class);
                 String lambdaToStringName = "lambdaToString";
-                String lambdaToStringDesc = Type.getMethodDescriptor(Type.getType(String.class),
-                        Type.getType(String.class),
-                        Type.getType(Object.class));
+
+                String lambdaToStringDesc = MethodType.methodType(String.class, String.class, Object.class, LambdaMetaInfo.class)
+                        .toMethodDescriptorString();
                 mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
                         transformerName,
                         lambdaToStringName,
@@ -187,35 +200,6 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
             mmv.visitEnd();
         }
 
-        private void visitMetaInfo() {
-            // AnnotationVisitor av = cw.visitAnnotation("fr/pturpin/lambdaString/LambdaMetaInfo", true);
-            mv.visitLdcInsn(Type.getDescriptor(LambdaMetaInfo.class));
-            mv.visitInsn(Opcodes.ICONST_1);
-            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    CLASS_WRITER_NAME,
-                    "visitAnnotation",
-                    CLASS_WRITER_VISIT_ANNOTATION_DESC,
-                    false);
-
-            MetaAnnotationVisitor mav = new MetaAnnotationVisitor(api, mv);
-
-            mav.visit("targetClass", () -> {
-                mv.visitVarInsn(Opcodes.ALOAD, 0);
-                mv.visitFieldInsn(Opcodes.GETFIELD,
-                        //"java/lang/invoke/AbstractValidatingLambdaMetafactory",
-                        INNER_CLASS_LAMBDA_METAFACTORY_NAME,
-                        "targetClass",
-                        "Ljava/lang/Class;");
-
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                        "jdk/internal/org/objectweb/asm/Type",
-                        "getType",
-                        "(Ljava/lang/Class;)Ljdk/internal/org/objectweb/asm/Type;",
-                        false);
-            });
-
-            mav.visitEnd();
-        }
     }
 
 }

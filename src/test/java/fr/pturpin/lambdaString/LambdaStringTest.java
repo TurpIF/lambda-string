@@ -96,7 +96,7 @@ class LambdaStringTest {
 
     static final class TestLambdaToStringStrategy implements LambdaToStringStrategy {
         @Override
-        public String createToString(Object lambda) {
+        public String createToString(Object lambda, LambdaMetaInfo metaInfo) {
             return INJECTED_TO_STRING;
         }
     }

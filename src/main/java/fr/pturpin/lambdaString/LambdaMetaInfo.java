@@ -1,14 +1,17 @@
 package fr.pturpin.lambdaString;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import static java.util.Objects.requireNonNull;
 
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface LambdaMetaInfo {
+public final class LambdaMetaInfo {
 
-    Class<?> targetClass();
+    private final Class<?> targetClass;
+
+    public LambdaMetaInfo(Class<?> targetClass) {
+        this.targetClass = requireNonNull(targetClass);
+    }
+
+    public Class<?> getTargetClass() {
+        return targetClass;
+    }
 
 }

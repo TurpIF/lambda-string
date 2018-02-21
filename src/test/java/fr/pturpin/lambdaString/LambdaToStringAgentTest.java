@@ -20,14 +20,14 @@ public class LambdaToStringAgentTest {
 
     private static final class EmptyToStringStrategy implements LambdaToStringStrategy {
         @Override
-        public String createToString(Object lambda) {
+        public String createToString(Object lambda, LambdaMetaInfo metaInfo) {
             return "";
         }
     }
 
     private static final class EmptyToStringStrategyBis implements LambdaToStringStrategy {
         @Override
-        public String createToString(Object lambda) {
+        public String createToString(Object lambda, LambdaMetaInfo metaInfo) {
             return "";
         }
     }
