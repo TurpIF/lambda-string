@@ -81,7 +81,6 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                         INNER_CLASS_LAMBDA_METAFACTORY_NAME,
                         "cw",
                         CLASS_WRITER_DESC);
-                mv.visitInsn(Opcodes.DUP);
 
                 visitToString();
             }
@@ -105,99 +104,122 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
             mmv.visitCode();
 
             mmv.visitTryCatchBlock(() -> {
-                // LambdaToStringLinker.lambdaToString(toStringStrategyClassName, this, new LambdaMetaInfo(targetClass));
-
-                mmv.visitLdcInsn(toStringStrategyClassName);
-                mmv.visitVarInsn(Opcodes.ALOAD, 0);
-
-                mmv.visitTypeInsn(Opcodes.NEW, LAMBDA_META_INFO_NAME);
-                mmv.visitInsn(Opcodes.DUP);
-                mmv.visitLdcInsn(() -> {
-                    // targetClass
-                    mv.visitVarInsn(Opcodes.ALOAD, 0);
-                    mv.visitFieldInsn(Opcodes.GETFIELD,
-                            INNER_CLASS_LAMBDA_METAFACTORY_NAME,
-                            "targetClass",
-                            "Ljava/lang/Class;");
-                    mv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                            "jdk/internal/org/objectweb/asm/Type",
-                            "getType",
-                            "(Ljava/lang/Class;)Ljdk/internal/org/objectweb/asm/Type;",
-                            false);
-                });
-                mmv.visitMethodInsn(Opcodes.INVOKESPECIAL,
-                        LAMBDA_META_INFO_NAME,
-                        "<init>",
-                        "(Ljava/lang/Class;)V",
-                        false);
-
-                String transformerName = Type.getInternalName(LambdaToStringLinker.class);
-                String lambdaToStringName = "lambdaToString";
-
-                String lambdaToStringDesc = MethodType.methodType(String.class, String.class, Object.class, LambdaMetaInfo.class)
-                        .toMethodDescriptorString();
-                mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                        transformerName,
-                        lambdaToStringName,
-                        lambdaToStringDesc,
-                        false);
+                visitExternalToString(mmv);
             }, () -> {
                 mmv.visitInsn(Opcodes.ARETURN);
             }, () -> {
-                // Original Object#toString:
-                // return getClass().getName() + "@" + Integer.toHexString(hashCode());
-
-                mmv.visitTypeInsn(Opcodes.NEW, "java/lang/StringBuilder");
-                mmv.visitInsn(Opcodes.DUP);
-                mmv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
-
-                mmv.visitVarInsn(Opcodes.ALOAD, 0);
-                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                        "java/lang/Object",
-                        "getClass",
-                        "()Ljava/lang/Class;",
-                        false);
-                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                        "java/lang/Class",
-                        "getName",
-                        "()Ljava/lang/String;",
-                        false);
-                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                        "java/lang/StringBuilder",
-                        "append",
-                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
-                        false);
-
-                mmv.visitLdcInsn("@");
-                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                        "java/lang/StringBuilder",
-                        "append",
-                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
-                        false);
-
-                mmv.visitVarInsn(Opcodes.ALOAD, 0);
-                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "hashCode", "()I", false);
-                mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                        "java/lang/Integer",
-                        "toHexString",
-                        "(I)Ljava/lang/String;",
-                        false);
-                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                        "java/lang/StringBuilder",
-                        "append",
-                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
-                        false);
-
-                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                        "java/lang/StringBuilder",
-                        "toString",
-                        "()Ljava/lang/String;",
-                        false);
+                visitDefaultToString(mmv);
                 mmv.visitInsn(Opcodes.ARETURN);
             }, Type.getInternalName(Throwable.class));
 
             mmv.visitMaxs(-1, -1); // Maxs computed by ClassWriter.COMPUTE_FRAMES, these arguments ignored
             mmv.visitEnd();
+        }
+
+        /**
+         * Push, in the stack of the lambda, the call to the external <code>toString</code> method used as new
+         * lambda <code>toString</code>.
+         * <p>
+         * The call is represented by this snippet:<br />
+         * <code>LambdaToStringLinker.lambdaToString(
+         *     toStringStrategyClassName,
+         *     this,
+         *     new LambdaMetaInfo(targetClass));</code>
+         *
+         * @param mmv meta method visitor of the generated lambda
+         */
+        private void visitExternalToString(MetaMethodVisitor mmv) {
+            mmv.visitLdcInsn(toStringStrategyClassName);
+            mmv.visitVarInsn(Opcodes.ALOAD, 0);
+
+            mmv.visitTypeInsn(Opcodes.NEW, LAMBDA_META_INFO_NAME);
+            mmv.visitInsn(Opcodes.DUP);
+            mmv.visitLdcInsn(() -> {
+                // targetClass
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitFieldInsn(Opcodes.GETFIELD,
+                        INNER_CLASS_LAMBDA_METAFACTORY_NAME,
+                        "targetClass",
+                        "Ljava/lang/Class;");
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                        "jdk/internal/org/objectweb/asm/Type",
+                        "getType",
+                        "(Ljava/lang/Class;)Ljdk/internal/org/objectweb/asm/Type;",
+                        false);
+            });
+            mmv.visitMethodInsn(Opcodes.INVOKESPECIAL,
+                    LAMBDA_META_INFO_NAME,
+                    "<init>",
+                    "(Ljava/lang/Class;)V",
+                    false);
+
+            String transformerName = Type.getInternalName(LambdaToStringLinker.class);
+            String lambdaToStringName = "lambdaToString";
+
+            String lambdaToStringDesc = MethodType.methodType(String.class, String.class, Object.class, LambdaMetaInfo.class)
+                    .toMethodDescriptorString();
+            mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                    transformerName,
+                    lambdaToStringName,
+                    lambdaToStringDesc,
+                    false);
+        }
+
+        /**
+         * Push the original {@link Object#toString()} implementation in the stack of the lambda
+         * <p>
+         * The original implementation is represented by this snippet :<br />
+         * <code>getClass().getName() + "@" + Integer.toHexString(hashCode())</code>
+         *
+         * @param mmv meta method visitor of the generated lambda
+         */
+        private void visitDefaultToString(MetaMethodVisitor mmv) {
+            mmv.visitTypeInsn(Opcodes.NEW, "java/lang/StringBuilder");
+            mmv.visitInsn(Opcodes.DUP);
+            mmv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
+
+            mmv.visitVarInsn(Opcodes.ALOAD, 0);
+            mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    "java/lang/Object",
+                    "getClass",
+                    "()Ljava/lang/Class;",
+                    false);
+            mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    "java/lang/Class",
+                    "getName",
+                    "()Ljava/lang/String;",
+                    false);
+            mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    "java/lang/StringBuilder",
+                    "append",
+                    "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+                    false);
+
+            mmv.visitLdcInsn("@");
+            mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    "java/lang/StringBuilder",
+                    "append",
+                    "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+                    false);
+
+            mmv.visitVarInsn(Opcodes.ALOAD, 0);
+            mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "hashCode", "()I", false);
+            mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                    "java/lang/Integer",
+                    "toHexString",
+                    "(I)Ljava/lang/String;",
+                    false);
+            mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    "java/lang/StringBuilder",
+                    "append",
+                    "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+                    false);
+
+            mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                    "java/lang/StringBuilder",
+                    "toString",
+                    "()Ljava/lang/String;",
+                    false);
         }
 
     }

@@ -4,7 +4,7 @@ import com.ea.agentloader.AgentLoader;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class LambdaToStringAgentTest {
+class LambdaToStringAgentTest {
 
     @Test
     void agentIsLoadableOnlyOnce() throws Exception {
