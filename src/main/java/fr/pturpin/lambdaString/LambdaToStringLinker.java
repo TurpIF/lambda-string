@@ -12,7 +12,9 @@ public final class LambdaToStringLinker {
      * Method injected in lambda as a <code>toString</code>
      */
     @SuppressWarnings("unused")
-    public static String lambdaToString(String strategyClassName, Object lambda, LambdaMetaInfo metaInfo) throws BootstrapMethodError {
+    public static String lambdaToString(String strategyClassName, Object lambda, LambdaMetaInfo metaInfo) throws
+            BootstrapMethodError,
+            LambdaToStringException {
         return linkStrategy(strategyClassName).createToString(lambda, metaInfo);
     }
 

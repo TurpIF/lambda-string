@@ -103,6 +103,8 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
             mmv.visitCode();
 
+            // NoClassDefFoundError is thrown if lambda does not have any visibility on this agent classes.
+            // This happens when lambda is loaded by the bootstrap class loader but not this agent classes.
             mmv.visitTryCatchBlock(() -> {
                 visitExternalToString(mmv);
             }, () -> {
@@ -110,7 +112,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
             }, () -> {
                 visitDefaultToString(mmv);
                 mmv.visitInsn(Opcodes.ARETURN);
-            }, Type.getInternalName(Throwable.class));
+            }, Type.getInternalName(NoClassDefFoundError.class));
 
             mmv.visitMaxs(-1, -1); // Maxs computed by ClassWriter.COMPUTE_FRAMES, these arguments ignored
             mmv.visitEnd();
