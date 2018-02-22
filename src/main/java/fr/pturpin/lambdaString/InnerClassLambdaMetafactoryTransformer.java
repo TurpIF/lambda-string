@@ -136,6 +136,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
             mmv.visitTypeInsn(Opcodes.NEW, LAMBDA_META_INFO_NAME);
             mmv.visitInsn(Opcodes.DUP);
+
             mmv.visitLdcInsn(() -> {
                 // targetClass
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
@@ -149,16 +150,96 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                         "(Ljava/lang/Class;)Ljdk/internal/org/objectweb/asm/Type;",
                         false);
             });
+
+            mmv.visitIntInsn(Opcodes.SIPUSH, () -> {
+                // implInfo.getReferenceKind()
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitFieldInsn(Opcodes.GETFIELD,
+                        INNER_CLASS_LAMBDA_METAFACTORY_NAME,
+                        "implInfo",
+                        "Ljava/lang/invoke/MethodHandleInfo;");
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                        "java/lang/invoke/MethodHandleInfo",
+                        "getReferenceKind",
+                        "()I",
+                        true);
+            });
+
+            mmv.visitLdcInsn(() -> {
+                // implInfo.getDeclaringClass().getName().replace('.', '/')
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitFieldInsn(Opcodes.GETFIELD,
+                        INNER_CLASS_LAMBDA_METAFACTORY_NAME,
+                        "implInfo",
+                        "Ljava/lang/invoke/MethodHandleInfo;");
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                        "java/lang/invoke/MethodHandleInfo",
+                        "getDeclaringClass",
+                        "()Ljava/lang/Class;",
+                        true);
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/Class",
+                        "getName",
+                        "()Ljava/lang/String;",
+                        false);
+                mv.visitIntInsn(Opcodes.BIPUSH, '.');
+                mv.visitInsn(Opcodes.I2C);
+                mv.visitIntInsn(Opcodes.BIPUSH, '/');
+                mv.visitInsn(Opcodes.I2C);
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/String",
+                        "replace",
+                        "(CC)Ljava/lang/String;",
+                        false);
+            });
+
+            mmv.visitLdcInsn(() -> {
+                // implInfo.getName()
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitFieldInsn(Opcodes.GETFIELD,
+                        INNER_CLASS_LAMBDA_METAFACTORY_NAME,
+                        "implInfo",
+                        "Ljava/lang/invoke/MethodHandleInfo;");
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                        "java/lang/invoke/MethodHandleInfo",
+                        "getName",
+                        "()Ljava/lang/String;",
+                        true);
+            });
+
+            mmv.visitLdcInsn(() -> {
+                // implInfo.getMethodType().toMethodDescriptorString();
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitFieldInsn(Opcodes.GETFIELD,
+                        INNER_CLASS_LAMBDA_METAFACTORY_NAME,
+                        "implInfo",
+                        "Ljava/lang/invoke/MethodHandleInfo;");
+                mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                        "java/lang/invoke/MethodHandleInfo",
+                        "getMethodType",
+                        "()Ljava/lang/invoke/MethodType;",
+                        true);
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/invoke/MethodType",
+                        "toMethodDescriptorString",
+                        "()Ljava/lang/String;",
+                        false);
+            });
+
             mmv.visitMethodInsn(Opcodes.INVOKESPECIAL,
                     LAMBDA_META_INFO_NAME,
                     "<init>",
-                    "(Ljava/lang/Class;)V",
+                    MethodType.methodType(void.class, Class.class, int.class, String.class, String.class, String.class)
+                            .toMethodDescriptorString(),
                     false);
 
             String transformerName = Type.getInternalName(LambdaToStringLinker.class);
             String lambdaToStringName = "lambdaToString";
 
-            String lambdaToStringDesc = MethodType.methodType(String.class, String.class, Object.class, LambdaMetaInfo.class)
+            String lambdaToStringDesc = MethodType.methodType(String.class,
+                    String.class,
+                    Object.class,
+                    LambdaMetaInfo.class)
                     .toMethodDescriptorString();
             mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
                     transformerName,

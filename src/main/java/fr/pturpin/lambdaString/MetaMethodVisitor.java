@@ -81,9 +81,13 @@ public final class MetaMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitIntInsn(int opcode, int operand) {
+        visitIntInsn(opcode, () -> push(operand));
+    }
+
+    public void visitIntInsn(int opcode, Runnable operandPusher) {
         dup();
         push(opcode);
-        push(operand);
+        operandPusher.run();
         invoke("visitIntInsn", "(II)V");
     }
 
@@ -121,7 +125,7 @@ public final class MetaMethodVisitor extends MethodVisitor {
      *
      * @param pusher runnable injecting the pushed constant in the internal stack.
      */
-    public void visitLdcInsn(Runnable pusher) {
+    public void  visitLdcInsn(Runnable pusher) {
         dup();
         pusher.run();
         invoke("visitLdcInsn", "(Ljava/lang/Object;)V");
