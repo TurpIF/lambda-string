@@ -10,6 +10,12 @@ public final class LambdaToStringLinker {
 
     /**
      * Method injected in lambda as a <code>toString</code>
+     *
+     * @param strategyClassName Class name of {@link LambdaToStringStrategy} to use
+     * @param lambda            The lambda object itself
+     * @param metaInfo          Meta information about the lambda
+     * @return <code>toString</code> value of the lambda
+     * @throws LambdaToStringException if the an error occurs while generating the toString
      */
     @SuppressWarnings("unused")
     public static String lambdaToString(String strategyClassName, Object lambda, LambdaMetaInfo metaInfo) throws

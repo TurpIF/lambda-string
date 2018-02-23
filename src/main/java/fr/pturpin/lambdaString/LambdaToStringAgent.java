@@ -4,7 +4,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Agent transforming the {@link java.lang.invoke.InnerClassLambdaMetafactory} class to inject a custom
+ * Agent transforming the <code>InnerClassLambdaMetafactory</code> class to inject a custom
  * {@link Object#toString()} to all created lambdas.
  * <p>
  * The injected <code>toString</code> is represented by a {@link LambdaToStringStrategy} class whose name is given as
@@ -19,9 +19,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * </p><p>
  * Lambda in classes loaded during bootstrap class loader are not supported except if the given
  * {@link LambdaToStringStrategy} class is included in the bootstrap classpath via
- * <code>-Xbootclasspath/p:&lt;path/to/agent/jar&gt;</code>.<br />
+ * <code>-Xbootclasspath/p:&lt;path/to/agent/jar&gt;</code>.<br>
  * If this property is not set, then the explicit {@link Object#toString()} implementation is injected in all lambdas
- * <code>toString</code> from bootstrap. This explicit implementation is:<br />
+ * <code>toString</code> from bootstrap. This explicit implementation is:<br>
  * <code>return getClass().getName() + "@" Integer.toHexString(hashCode());</code>
  * </p><p>
  * This agent is runnable only once in the same JVM. A {@link IllegalStateException} is thrown in case of multiple run.

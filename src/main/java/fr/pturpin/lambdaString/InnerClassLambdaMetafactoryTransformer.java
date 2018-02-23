@@ -122,7 +122,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
          * Push, in the stack of the lambda, the call to the external <code>toString</code> method used as new
          * lambda <code>toString</code>.
          * <p>
-         * The call is represented by this snippet:<br />
+         * The call is represented by this snippet:<br>
          * <code>LambdaToStringLinker.lambdaToString(
          *     toStringStrategyClassName,
          *     this,
@@ -251,7 +251,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
         /**
          * Push the original {@link Object#toString()} implementation in the stack of the lambda
          * <p>
-         * The original implementation is represented by this snippet :<br />
+         * The original implementation is represented by this snippet :<br>
          * <code>getClass().getName() + "@" + Integer.toHexString(hashCode())</code>
          *
          * @param mmv meta method visitor of the generated lambda
