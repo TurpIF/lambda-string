@@ -49,9 +49,17 @@ public final class LambdaToStringAgent {
             throw new IllegalStateException("This agent is runnable only once but was already ran with " + args + " as argument.");
         }
 
+        Class<?> metaFactoryClass;
+        try {
+            // Make sure it's already loaded, so Instrumentation#retransformClasses does not throw a ClassCircularityError
+            metaFactoryClass = Class.forName("java.lang.invoke.InnerClassLambdaMetafactory");
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Lambda meta factory not found", e);
+        }
+
         inst.addTransformer(new InnerClassLambdaMetafactoryTransformer(agentArgs), true);
         try {
-            inst.retransformClasses(Class.forName("java.lang.invoke.InnerClassLambdaMetafactory"));
+            inst.retransformClasses(metaFactoryClass);
             // Impossible to retransform the already created lambda classes.
             // On JDK8: there is a bug in HotSpot implementation: https://bugs.openjdk.java.net/browse/JDK-8145964
             // On JDK9: anonymous classes (and so lambda classes) are not Instrumentation.isModifiableClass
