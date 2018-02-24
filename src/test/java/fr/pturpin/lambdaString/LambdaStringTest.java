@@ -73,7 +73,7 @@ class LambdaStringTest {
     /**
      * Returns the original {@link Object#toString()} of the given object.
      */
-    private static String defaultToString(Object object) {
+    static String defaultToString(Object object) {
         return object.getClass().getName() + "@" + Integer.toHexString(object.hashCode());
     }
 
