@@ -69,7 +69,6 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
         InjectingToStringMethodVisitor(MethodVisitor mv, String toStringStrategyClassName) {
             super(Opcodes.ASM5, mv);
             this.toStringStrategyClassName = requireNonNull(toStringStrategyClassName);
-            LambdaToStringLinker.linkStrategy(toStringStrategyClassName); // Check validity
         }
 
         @Override

@@ -11,21 +11,23 @@ import java.util.concurrent.atomic.AtomicReference;
  * an agent parameters. The class should have a default constructor. If the constructor is not visible, the agent try
  * to {@link java.lang.reflect.Constructor#setAccessible(boolean) set it accessible} but may failed because of a
  * {@link SecurityManager}.
- * </p><p>
+ * <p>
  * If no class parameter is given, this agent does nothing and returns silently.
- * </p><p>
+ * <p>
+ * If an error occurs because the given strategy class name is invalid, a {@link RuntimeException} containing the
+ * {@link LambdaToStringLinkerException} cause is thrown while loading this agent.
+ * <p>
  * If this agent is dynamically set up during runtime, already created lambdas are not modified and keep their
  * default <code>toString</code>.
- * </p><p>
+ * <p>
  * Lambda in classes loaded during bootstrap class loader are not supported except if the given
  * {@link LambdaToStringStrategy} class is included in the bootstrap classpath via
  * <code>-Xbootclasspath/p:&lt;path/to/agent/jar&gt;</code>.<br>
  * If this property is not set, then the explicit {@link Object#toString()} implementation is injected in all lambdas
  * <code>toString</code> from bootstrap. This explicit implementation is:<br>
  * <code>return getClass().getName() + "@" Integer.toHexString(hashCode());</code>
- * </p><p>
+ * <p>
  * This agent is runnable only once in the same JVM. A {@link IllegalStateException} is thrown in case of multiple run.
- * </p>
  */
 public final class LambdaToStringAgent {
 
@@ -38,6 +40,13 @@ public final class LambdaToStringAgent {
     public static void premain(String agentArgs, Instrumentation inst) {
         if (agentArgs == null || agentArgs.isEmpty()) {
             return;
+        }
+
+        try {
+            // Check validity
+            LambdaToStringLinker.createStrategy(agentArgs);
+        } catch (LambdaToStringLinkerException e) {
+            throw new RuntimeException(e);
         }
 
         if (!initializedArgs.compareAndSet(null, agentArgs)) {

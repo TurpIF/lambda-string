@@ -2,12 +2,8 @@ package fr.pturpin.lambdaString;
 
 import java.lang.invoke.*;
 import java.lang.reflect.Constructor;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class LambdaToStringLinker {
-
-    private static final Map<String, LambdaToStringStrategy> LINKED_STRATEGY = new ConcurrentHashMap<>();
 
     /**
      * Generates a new {@link CallSite} from the given {@link LambdaToStringStrategy} class name.
@@ -20,54 +16,51 @@ public final class LambdaToStringLinker {
      * instantiated per lambda and those strategies are never shared.
      * <p>
      * The given class name should represent a static {@link LambdaToStringStrategy} class name with a default
-     * instantiable default constructor. If any error occurs, it's embedded in a {@link LambdaToStringException}.
+     * instantiable default constructor. If any error occurs, it's embedded in a {@link LambdaToStringLinkerException}.
      *
      * @param strategyClassName Class name of {@link LambdaToStringStrategy} to link with
      * @return the CallSite whose target can be used to create a lambda <code>toString</code>
-     * @throws LambdaToStringException if an error occurs while instantiating the new strategy
+     * @throws LambdaToStringLinkerException if an error occurs while instantiating the new strategy
      */
     public static CallSite link(MethodHandles.Lookup caller,
             String invokedName,
             MethodType invokedType,
             String strategyClassName)
-            throws LambdaToStringException {
-        LambdaToStringStrategy strategy;
-        try {
-            strategy = createStrategy(strategyClassName);
-        } catch (ReflectiveOperationException e) {
-            throw new LambdaToStringException("Exception instantiating toString strategy object", e);
-        }
+            throws LambdaToStringLinkerException {
+        LambdaToStringStrategy strategy = createStrategy(strategyClassName);
         MethodHandle mh = MethodHandles.constant(LambdaToStringStrategy.class, strategy);
         return new ConstantCallSite(mh);
     }
 
-    static LambdaToStringStrategy linkStrategy(String strategyClassName) throws BootstrapMethodError {
-        return LINKED_STRATEGY.computeIfAbsent(strategyClassName, name -> {
-            try {
-                return createStrategy(name);
-            } catch (ReflectiveOperationException e) {
-                throw new BootstrapMethodError(e);
-            }
-        });
-    }
-
-    private static LambdaToStringStrategy createStrategy(String strategyClassName) throws
-            ReflectiveOperationException {
+    static LambdaToStringStrategy createStrategy(String strategyClassName) throws
+            LambdaToStringLinkerException {
         ClassLoader classLoader = LambdaToStringLinker.class.getClassLoader();
 
-        Class<?> klass = classLoader.loadClass(strategyClassName);
+        Class<?> klass;
+        try {
+            klass = classLoader.loadClass(strategyClassName);
+        } catch (ClassNotFoundException e) {
+            throw new LambdaToStringLinkerException(e);
+        }
+
         if (!LambdaToStringStrategy.class.isAssignableFrom(klass)) {
-            throw new ReflectiveOperationException(LambdaToStringStrategy.class + " is not assignable from given class " + klass);
+            throw new LambdaToStringLinkerException(LambdaToStringStrategy.class + " is not assignable from given class " + klass);
         }
         @SuppressWarnings("unchecked") Class<LambdaToStringStrategy> castKlass = (Class<LambdaToStringStrategy>) klass;
 
-        Constructor<LambdaToStringStrategy> constructor = castKlass.getDeclaredConstructor();
+        Constructor<LambdaToStringStrategy> constructor;
         try {
+            constructor = castKlass.getDeclaredConstructor();
             constructor.setAccessible(true);
-        } catch (SecurityException e) {
-            throw new ReflectiveOperationException("No accessible constructor in " + strategyClassName + " class", e);
+        } catch (SecurityException | NoSuchMethodException e) {
+            throw new LambdaToStringLinkerException("No accessible constructor in " + strategyClassName + " class", e);
         }
-        return constructor.newInstance();
+
+        try {
+            return constructor.newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new LambdaToStringLinkerException("Exception instantiating strategy object", e);
+        }
     }
 
 }

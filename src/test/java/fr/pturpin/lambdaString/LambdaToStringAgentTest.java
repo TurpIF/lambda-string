@@ -7,6 +7,12 @@ import org.junit.jupiter.api.Test;
 class LambdaToStringAgentTest {
 
     @Test
+    void agentShouldThrowIfItsInvalid() throws Exception {
+        Assertions.assertThatThrownBy(() -> AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(),
+                "unexisting agent class"));
+    }
+
+    @Test
     void agentIsLoadableOnlyOnce() throws Exception {
         AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), EmptyToStringStrategy.class.getName());
 
