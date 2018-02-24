@@ -112,6 +112,39 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
             }, () -> {
                 mmv.visitInsn(Opcodes.ARETURN);
             }, () -> {
+                // if (!(e.getCause() instanceof NoClassDefFoundError)) throw e;
+                Runnable newIf = () -> {
+                    mmv.newLabel(); // ifInstanceOf
+                    mv.visitVarInsn(Opcodes.ASTORE, 2);
+                };
+                Runnable pushIf = () -> mv.visitVarInsn(Opcodes.ALOAD, 2);
+                Runnable newElse = () -> {
+                    mmv.newLabel(); // ifInstanceOf
+                    mv.visitVarInsn(Opcodes.ASTORE, 3);
+                };
+                Runnable pushElse = () -> mv.visitVarInsn(Opcodes.ALOAD, 3);
+
+                mmv.visitVarInsn(Opcodes.ASTORE, 1);
+                newIf.run();
+                newElse.run();
+
+                mmv.visitVarInsn(Opcodes.ALOAD, 1);
+                mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                        "java/lang/BootstrapMethodError",
+                        "getCause",
+                        "()Ljava/lang/Throwable;",
+                        false);
+                mmv.visitTypeInsn(Opcodes.INSTANCEOF, "java/lang/NoClassDefFoundError");
+                mmv.visitJumpInsn(Opcodes.IFNE, pushElse);
+
+                // If instanceof
+                mmv.visitLabel(pushIf);
+                mmv.visitVarInsn(Opcodes.ALOAD, 1);
+                mmv.visitInsn(Opcodes.ATHROW);
+
+                // Else
+                mmv.visitLabel(pushElse);
+                mmv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
                 visitDefaultToString(mmv);
                 mmv.visitInsn(Opcodes.ARETURN);
             }, Type.getInternalName(BootstrapMethodError.class));

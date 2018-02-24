@@ -113,9 +113,22 @@ public final class MetaMethodVisitor extends MethodVisitor {
         throw new UnsupportedOperationException();
     }
 
+    public void visitJumpInsn(int opcode, Runnable labelPusher) {
+        dup();
+        push(opcode);
+        labelPusher.run();
+        invoke("visitJumpInsn", "(ILjdk/internal/org/objectweb/asm/Label;)V");
+    }
+
     @Override
     public void visitLabel(Label label) {
         throw new UnsupportedOperationException();
+    }
+
+    public void visitLabel(Runnable labelPusher) {
+        dup();
+        labelPusher.run();
+        invoke("visitLabel", "(Ljdk/internal/org/objectweb/asm/Label;)V");
     }
 
     @Override
@@ -222,24 +235,28 @@ public final class MetaMethodVisitor extends MethodVisitor {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Create a new {@link jdk.internal.org.objectweb.asm.Label} and push it in the meta stack.
+     */
+    public void newLabel() {
+        mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Label");
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "jdk/internal/org/objectweb/asm/Label", "<init>", "()V", false);
+    }
+
     public void visitTryCatchBlock(
             Runnable tryBlock,
             Runnable endTryBlock,
             Runnable catchBlock,
             String type) {
-        Runnable newLabel = () -> {
-            mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Label");
-            mv.visitInsn(Opcodes.DUP);
-            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "jdk/internal/org/objectweb/asm/Label", "<init>", "()V", false);
-        };
 
-        newLabel.run();
+        newLabel();
         mv.visitVarInsn(Opcodes.ASTORE, 1);
 
-        newLabel.run();
+        newLabel();
         mv.visitVarInsn(Opcodes.ASTORE, 2);
 
-        newLabel.run();
+        newLabel();
         mv.visitVarInsn(Opcodes.ASTORE, 3);
 
         dup();
@@ -253,25 +270,12 @@ public final class MetaMethodVisitor extends MethodVisitor {
                         "Ljdk/internal/org/objectweb/asm/Label;" +
                         "Ljava/lang/String;)V");
 
-        dup();
-        mv.visitVarInsn(Opcodes.ALOAD, 1);
-        invoke("visitLabel", "(Ljdk/internal/org/objectweb/asm/Label;)V");
-
+        visitLabel(() -> mv.visitVarInsn(Opcodes.ALOAD, 1));
         tryBlock.run();
-
-        dup();
-        mv.visitVarInsn(Opcodes.ALOAD, 2);
-        invoke("visitLabel", "(Ljdk/internal/org/objectweb/asm/Label;)V");
-
+        visitLabel(() -> mv.visitVarInsn(Opcodes.ALOAD, 2));
         endTryBlock.run();
-
-        dup();
-        mv.visitVarInsn(Opcodes.ALOAD, 3);
-        invoke("visitLabel", "(Ljdk/internal/org/objectweb/asm/Label;)V");
-
-        // stack
-        visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] { type });
-
+        visitLabel(() -> mv.visitVarInsn(Opcodes.ALOAD, 3));
+        visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] { type }); // stack
         catchBlock.run();
     }
 
