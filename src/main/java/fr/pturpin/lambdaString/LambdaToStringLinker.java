@@ -1,5 +1,6 @@
 package fr.pturpin.lambdaString;
 
+import java.lang.invoke.*;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,19 +10,35 @@ public final class LambdaToStringLinker {
     private static final Map<String, LambdaToStringStrategy> LINKED_STRATEGY = new ConcurrentHashMap<>();
 
     /**
-     * Method injected in lambda as a <code>toString</code>
+     * Generates a new {@link CallSite} from the given {@link LambdaToStringStrategy} class name.
+     * <p>
+     * The call site represent the {@link LambdaToStringStrategy#createToString(Object, LambdaMetaInfo)} method in a
+     * new instance of the given class.
+     * <p>
+     * For every call, a new call site is generated with a new strategy instance. Also, the call site is
+     * {@link ConstantCallSite constant} and has a permanent target. This means that a unique strategy per VM is
+     * instantiated per lambda and those strategies are never shared.
+     * <p>
+     * The given class name should represent a static {@link LambdaToStringStrategy} class name with a default
+     * instantiable default constructor. If any error occurs, it's embedded in a {@link LambdaToStringException}.
      *
-     * @param strategyClassName Class name of {@link LambdaToStringStrategy} to use
-     * @param lambda            The lambda object itself
-     * @param metaInfo          Meta information about the lambda
-     * @return <code>toString</code> value of the lambda
-     * @throws LambdaToStringException if the an error occurs while generating the toString
+     * @param strategyClassName Class name of {@link LambdaToStringStrategy} to link with
+     * @return the CallSite whose target can be used to create a lambda <code>toString</code>
+     * @throws LambdaToStringException if an error occurs while instantiating the new strategy
      */
-    @SuppressWarnings("unused")
-    public static String lambdaToString(String strategyClassName, Object lambda, LambdaMetaInfo metaInfo) throws
-            BootstrapMethodError,
-            LambdaToStringException {
-        return linkStrategy(strategyClassName).createToString(lambda, metaInfo);
+    public static CallSite link(MethodHandles.Lookup caller,
+            String invokedName,
+            MethodType invokedType,
+            String strategyClassName)
+            throws LambdaToStringException {
+        LambdaToStringStrategy strategy;
+        try {
+            strategy = createStrategy(strategyClassName);
+        } catch (ReflectiveOperationException e) {
+            throw new LambdaToStringException("Exception instantiating toString strategy object", e);
+        }
+        MethodHandle mh = MethodHandles.constant(LambdaToStringStrategy.class, strategy);
+        return new ConstantCallSite(mh);
     }
 
     static LambdaToStringStrategy linkStrategy(String strategyClassName) throws BootstrapMethodError {

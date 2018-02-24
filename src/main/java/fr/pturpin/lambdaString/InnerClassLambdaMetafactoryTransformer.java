@@ -3,6 +3,8 @@ package fr.pturpin.lambdaString;
 import org.objectweb.asm.*;
 
 import java.lang.instrument.ClassFileTransformer;
+import java.lang.invoke.CallSite;
+import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.security.ProtectionDomain;
 
@@ -103,7 +105,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
 
             mmv.visitCode();
 
-            // NoClassDefFoundError is thrown if lambda does not have any visibility on this agent classes.
+            // NoClassDefFoundError in a BootstrapMethodError is thrown if lambda does not have any visibility on this agent classes.
             // This happens when lambda is loaded by the bootstrap class loader but not this agent classes.
             mmv.visitTryCatchBlock(() -> {
                 visitExternalToString(mmv);
@@ -112,7 +114,7 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
             }, () -> {
                 visitDefaultToString(mmv);
                 mmv.visitInsn(Opcodes.ARETURN);
-            }, Type.getInternalName(NoClassDefFoundError.class));
+            }, Type.getInternalName(BootstrapMethodError.class));
 
             mmv.visitMaxs(-1, -1); // Maxs computed by ClassWriter.COMPUTE_FRAMES, these arguments ignored
             mmv.visitEnd();
@@ -131,7 +133,33 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
          * @param mmv meta method visitor of the generated lambda
          */
         private void visitExternalToString(MetaMethodVisitor mmv) {
-            mmv.visitLdcInsn(toStringStrategyClassName);
+            // Use a invokedynamic with constant call site to cache the initialization setup and keep permanent
+            // strategy instance by lambda
+            mmv.visitInvokeDynamicInsn("createToString",
+                    Type.getMethodDescriptor(Type.getType(LambdaToStringStrategy.class)),
+                    () -> {
+                        // Handle to LambdaToStringLinker#link
+                        // The Handle may not be given through a simpleLDC to the InnerClassLambdaMetafactory because it
+                        // doesn't know the LambdaToStringLinker class
+                        mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Handle");
+                        mv.visitInsn(Opcodes.DUP);
+                        mv.visitIntInsn(Opcodes.BIPUSH, Opcodes.H_INVOKESTATIC);
+                        mv.visitLdcInsn(Type.getInternalName(LambdaToStringLinker.class));
+                        mv.visitLdcInsn("link");
+                        mv.visitLdcInsn(MethodType.methodType(CallSite.class,
+                                MethodHandles.Lookup.class,
+                                String.class,
+                                MethodType.class,
+                                String.class).toMethodDescriptorString());
+                        mv.visitMethodInsn(Opcodes.INVOKESPECIAL,
+                                "jdk/internal/org/objectweb/asm/Handle",
+                                "<init>",
+                                MethodType.methodType(void.class, int.class, String.class, String.class, String.class)
+                                        .toMethodDescriptorString(),
+                                false);
+                    },
+                    toStringStrategyClassName);
+
             mmv.visitVarInsn(Opcodes.ALOAD, 0);
 
             mmv.visitTypeInsn(Opcodes.NEW, LAMBDA_META_INFO_NAME);
@@ -233,19 +261,11 @@ public final class InnerClassLambdaMetafactoryTransformer implements ClassFileTr
                             .toMethodDescriptorString(),
                     false);
 
-            String transformerName = Type.getInternalName(LambdaToStringLinker.class);
-            String lambdaToStringName = "lambdaToString";
-
-            String lambdaToStringDesc = MethodType.methodType(String.class,
-                    String.class,
-                    Object.class,
-                    LambdaMetaInfo.class)
-                    .toMethodDescriptorString();
-            mmv.visitMethodInsn(Opcodes.INVOKESTATIC,
-                    transformerName,
-                    lambdaToStringName,
-                    lambdaToStringDesc,
-                    false);
+            mmv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                    Type.getInternalName(LambdaToStringStrategy.class),
+                    "createToString",
+                    MethodType.methodType(String.class, Object.class, LambdaMetaInfo.class).toMethodDescriptorString(),
+                    true);
         }
 
         /**

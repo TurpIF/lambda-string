@@ -93,10 +93,14 @@ public final class MetaMethodVisitor extends MethodVisitor {
 
     @Override
     public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
+        visitInvokeDynamicInsn(name, desc, () -> push(bsm), bsmArgs);
+    }
+
+    public void visitInvokeDynamicInsn(String name, String desc, Runnable bsmPusher, Object... bsmArgs) {
         dup();
         push(name);
         push(desc);
-        push(bsm);
+        bsmPusher.run();
         push(bsmArgs, "java/lang/Object");
         invoke("visitInvokeDynamicInsn",
                 "(Ljava/lang/String;Ljava/lang/String;" +
