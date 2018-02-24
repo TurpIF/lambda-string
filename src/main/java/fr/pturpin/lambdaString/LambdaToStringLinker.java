@@ -2,6 +2,9 @@ package fr.pturpin.lambdaString;
 
 import java.lang.invoke.*;
 import java.lang.reflect.Constructor;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 
 public final class LambdaToStringLinker {
 
@@ -50,9 +53,12 @@ public final class LambdaToStringLinker {
 
         Constructor<LambdaToStringStrategy> constructor;
         try {
-            constructor = castKlass.getDeclaredConstructor();
-            constructor.setAccessible(true);
-        } catch (SecurityException | NoSuchMethodException e) {
+            constructor = AccessController.doPrivileged((PrivilegedExceptionAction<Constructor<LambdaToStringStrategy>>) () -> {
+                Constructor<LambdaToStringStrategy> ctor = castKlass.getDeclaredConstructor();
+                ctor.setAccessible(true);
+                return ctor;
+            });
+        } catch (PrivilegedActionException e) {
             throw new LambdaToStringLinkerException("No accessible constructor in " + strategyClassName + " class", e);
         }
 
