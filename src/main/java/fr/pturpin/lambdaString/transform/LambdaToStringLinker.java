@@ -1,4 +1,6 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.transform;
+
+import fr.pturpin.lambdaString.strategy.LambdaToStringStrategy;
 
 import java.lang.invoke.*;
 import java.lang.reflect.Constructor;
@@ -35,7 +37,7 @@ public final class LambdaToStringLinker {
         return new ConstantCallSite(mh);
     }
 
-    static LambdaToStringStrategy createStrategy(String strategyClassName) throws
+    public static LambdaToStringStrategy createStrategy(String strategyClassName) throws
             LambdaToStringLinkerException {
         ClassLoader classLoader = LambdaToStringLinker.class.getClassLoader();
 

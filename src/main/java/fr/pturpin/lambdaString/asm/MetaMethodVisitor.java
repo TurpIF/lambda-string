@@ -1,4 +1,4 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.asm;
 
 import org.objectweb.asm.*;
 

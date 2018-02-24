@@ -1,4 +1,9 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.agent;
+
+import fr.pturpin.lambdaString.strategy.LambdaToStringStrategy;
+import fr.pturpin.lambdaString.transform.InnerClassLambdaMetafactoryTransformer;
+import fr.pturpin.lambdaString.transform.LambdaToStringLinker;
+import fr.pturpin.lambdaString.transform.LambdaToStringLinkerException;
 
 import java.lang.instrument.Instrumentation;
 import java.util.concurrent.atomic.AtomicReference;

@@ -1,6 +1,8 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.agent;
 
 import com.ea.agentloader.AgentLoader;
+import fr.pturpin.lambdaString.strategy.LambdaToStringStrategy;
+import fr.pturpin.lambdaString.transform.LambdaMetaInfo;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 

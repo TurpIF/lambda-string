@@ -1,4 +1,4 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.transform;
 
 import static java.util.Objects.requireNonNull;
 

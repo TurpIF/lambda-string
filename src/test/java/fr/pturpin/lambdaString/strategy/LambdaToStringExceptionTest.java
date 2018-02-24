@@ -1,6 +1,9 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.strategy;
 
 import com.ea.agentloader.AgentLoader;
+import fr.pturpin.lambdaString.LambdaTestHolder.Lambda;
+import fr.pturpin.lambdaString.agent.LambdaToStringAgent;
+import fr.pturpin.lambdaString.transform.LambdaMetaInfo;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,7 +17,7 @@ class LambdaToStringExceptionTest {
 
     @Test
     void exceptionThrownInToStringShouldNotBeIgnored() throws Exception {
-        LambdaStringTest.Lambda lambda = () -> {};
+        Lambda lambda = () -> {};
 
         Assertions.assertThatThrownBy(lambda::toString)
                 .isInstanceOf(LambdaToStringException.class)

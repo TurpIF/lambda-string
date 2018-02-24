@@ -1,17 +1,20 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.agent;
 
-import fr.pturpin.lambdaString.LambdaStringTest.Lambda;
+import fr.pturpin.lambdaString.LambdaTestHolder;
+import fr.pturpin.lambdaString.LambdaTestHolder.Lambda;
+import fr.pturpin.lambdaString.strategy.LambdaToStringStrategy;
+import fr.pturpin.lambdaString.transform.LambdaMetaInfo;
 import org.junit.jupiter.api.Test;
 
 import java.util.function.Function;
 
-import static fr.pturpin.lambdaString.LambdaStringTest.defaultToString;
+import static fr.pturpin.lambdaString.LambdaTestHolder.defaultToString;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * IT of the {@link LambdaToStringAgent} agent.
  * This test should be called with the agent set and with {@link ITLambdaToStringStrategy} class name as parameter :<br>
- * <code>-javaagent:&lt;path-to-agent-jar&gt;=fr.pturpin.lambdaString.LambdaToStringAgentIT$ITLambdaToStringStrategy</code>
+ * <code>-javaagent:&lt;path-to-agent-jar&gt;=fr.pturpin.lambdaString.agent.LambdaToStringAgentIT$ITLambdaToStringStrategy</code>
  */
 class LambdaToStringAgentIT {
 
@@ -35,7 +38,7 @@ class LambdaToStringAgentIT {
 
     @Test
     void methodRefFromInstanceMethod() {
-        Lambda methodRef = LambdaStringTest::body;
+        Lambda methodRef = LambdaTestHolder::body;
         assertThat(methodRef.toString()).isEqualTo(INJECTED_TO_STRING);
     }
 

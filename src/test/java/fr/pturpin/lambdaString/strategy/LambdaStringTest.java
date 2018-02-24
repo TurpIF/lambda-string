@@ -1,11 +1,16 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.strategy;
 
 import com.ea.agentloader.AgentLoader;
+import fr.pturpin.lambdaString.LambdaTestHolder;
+import fr.pturpin.lambdaString.LambdaTestHolder.Lambda;
+import fr.pturpin.lambdaString.agent.LambdaToStringAgent;
+import fr.pturpin.lambdaString.transform.LambdaMetaInfo;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.function.Function;
 
+import static fr.pturpin.lambdaString.LambdaTestHolder.defaultToString;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class LambdaStringTest {
@@ -20,10 +25,10 @@ class LambdaStringTest {
     @BeforeAll
     static void beforeAll() {
         STATIC_LAMBDA_BEFORE_AGENT = () -> {};
-        STATIC_METHOD_REF_BEFORE_AGENT = LambdaStringTest::body;
+        STATIC_METHOD_REF_BEFORE_AGENT = LambdaTestHolder::body;
         AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), TestLambdaToStringStrategy.class.getName());
         STATIC_LAMBDA_AFTER_AGENT = () -> {};
-        STATIC_METHOD_REF_AFTER_AGENT = LambdaStringTest::body;
+        STATIC_METHOD_REF_AFTER_AGENT = LambdaTestHolder::body;
     }
 
     @Test
@@ -44,7 +49,7 @@ class LambdaStringTest {
 
     @Test
     void methodRefFromInstanceMethod() {
-        Lambda methodRefName = LambdaStringTest::body;
+        Lambda methodRefName = LambdaTestHolder::body;
         assertThat(methodRefName.toString()).isEqualTo(INJECTED_TO_STRING);
     }
 
@@ -68,30 +73,6 @@ class LambdaStringTest {
     @Test
     void methodRefLambdaAfterAgent() throws Exception {
         assertThat(STATIC_METHOD_REF_AFTER_AGENT.toString()).isEqualTo(INJECTED_TO_STRING);
-    }
-
-    /**
-     * Returns the original {@link Object#toString()} of the given object.
-     */
-    static String defaultToString(Object object) {
-        return object.getClass().getName() + "@" + Integer.toHexString(object.hashCode());
-    }
-
-
-    /**
-     * Dummy method whose reference match the {@link Lambda} interface
-     */
-    static void body() {
-        // nothing
-    }
-
-    /**
-     * Dummy functional interface to work on in tests
-     */
-    @FunctionalInterface
-    interface Lambda {
-        @SuppressWarnings("unused")
-        void body();
     }
 
     static final class TestLambdaToStringStrategy implements LambdaToStringStrategy {

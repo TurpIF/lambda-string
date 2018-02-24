@@ -1,7 +1,10 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.transform;
 
 import com.ea.agentloader.AgentLoader;
-import fr.pturpin.lambdaString.LambdaStringTest.Lambda;
+import fr.pturpin.lambdaString.LambdaTestHolder;
+import fr.pturpin.lambdaString.LambdaTestHolder.Lambda;
+import fr.pturpin.lambdaString.agent.LambdaToStringAgent;
+import fr.pturpin.lambdaString.strategy.LambdaToStringStrategy;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -33,8 +36,8 @@ class LambdaToStringLinkerTest {
 
     @Test
     void methodRefStrategyShouldNotBeShared() throws Exception {
-        Lambda methodRef1 = LambdaStringTest::body;
-        Lambda methodRef2 = LambdaStringTest::body;
+        Lambda methodRef1 = LambdaTestHolder::body;
+        Lambda methodRef2 = LambdaTestHolder::body;
 
         assertThat(methodRef1.toString()).isEqualTo("0");
         assertThat(methodRef2.toString()).isEqualTo("0");
@@ -42,7 +45,7 @@ class LambdaToStringLinkerTest {
 
     @Test
     void methodRefStrategyShouldBePermanent() throws Exception {
-        Lambda methodRef = LambdaStringTest::body;
+        Lambda methodRef = LambdaTestHolder::body;
 
         assertThat(methodRef.toString()).isEqualTo("0");
         assertThat(methodRef.toString()).isEqualTo("1");

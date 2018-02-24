@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
-Premain-Class: fr.pturpin.lambdaString.LambdaToStringAgent
-Agent-Class: fr.pturpin.lambdaString.LambdaToStringAgent
+Premain-Class: fr.pturpin.lambdaString.agent.LambdaToStringAgent
+Agent-Class: fr.pturpin.lambdaString.agent.LambdaToStringAgent
 Can-Retransform-Classes: true

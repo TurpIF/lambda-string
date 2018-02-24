@@ -1,4 +1,6 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.transform;
+
+import fr.pturpin.lambdaString.strategy.LambdaToStringStrategy;
 
 /**
  * Exception representing an error while instantiating a new {@link LambdaToStringStrategy}.

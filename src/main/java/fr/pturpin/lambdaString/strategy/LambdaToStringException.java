@@ -1,4 +1,6 @@
-package fr.pturpin.lambdaString;
+package fr.pturpin.lambdaString.strategy;
+
+import fr.pturpin.lambdaString.transform.LambdaMetaInfo;
 
 /**
  * Exception representing an error while computing the
