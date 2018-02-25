@@ -2,6 +2,9 @@ package fr.pturpin.lambdaString.asm;
 
 import org.objectweb.asm.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public final class MetaMethodVisitor extends MethodVisitor {
@@ -237,7 +240,7 @@ public final class MetaMethodVisitor extends MethodVisitor {
     }
 
     /**
-     * Create a new {@link jdk.internal.org.objectweb.asm.Label} and push it in the meta stack.
+     * Create a new <code>jdk.internal.org.objectweb.asm.Label</code> and push it in the meta stack.
      */
     public void newLabel() {
         mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Label");
@@ -245,39 +248,46 @@ public final class MetaMethodVisitor extends MethodVisitor {
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "jdk/internal/org/objectweb/asm/Label", "<init>", "()V", false);
     }
 
-    public void visitTryCatchBlock(
-            Runnable tryBlock,
-            Runnable endTryBlock,
-            Runnable catchBlock,
-            String type) {
+    public void visitTryCatchBlock(Runnable tryBlock, Runnable endTryBlock, Map<String, Runnable> multiCatchBlockByType) {
+        if (multiCatchBlockByType.isEmpty()) {
+            tryBlock.run();
+            endTryBlock.run();
+            return;
+        }
 
-        newLabel();
-        mv.visitVarInsn(Opcodes.ASTORE, 1);
+        List<Map.Entry<String, Runnable>> multiCatchBlock = new ArrayList<>(multiCatchBlockByType.entrySet());
+        int nbCatch = multiCatchBlock.size();
+        int nbLabels = 2 + nbCatch;
+        for (int i = 0; i < nbLabels; i++) {
+            newLabel();
+            mv.visitVarInsn(Opcodes.ASTORE, i + 1);
+        }
 
-        newLabel();
-        mv.visitVarInsn(Opcodes.ASTORE, 2);
-
-        newLabel();
-        mv.visitVarInsn(Opcodes.ASTORE, 3);
-
-        dup();
-        mv.visitVarInsn(Opcodes.ALOAD, 1);
-        mv.visitVarInsn(Opcodes.ALOAD, 2);
-        mv.visitVarInsn(Opcodes.ALOAD, 3);
-        push(type);
-        invoke("visitTryCatchBlock",
-                "(Ljdk/internal/org/objectweb/asm/Label;" +
-                        "Ljdk/internal/org/objectweb/asm/Label;" +
-                        "Ljdk/internal/org/objectweb/asm/Label;" +
-                        "Ljava/lang/String;)V");
+        for (int i = 0; i < nbCatch; i++) {
+            dup();
+            mv.visitVarInsn(Opcodes.ALOAD, 1);
+            mv.visitVarInsn(Opcodes.ALOAD, 2);
+            mv.visitVarInsn(Opcodes.ALOAD, 3 + i);
+            push(multiCatchBlock.get(i).getKey());
+            invoke("visitTryCatchBlock",
+                    "(Ljdk/internal/org/objectweb/asm/Label;" +
+                            "Ljdk/internal/org/objectweb/asm/Label;" +
+                            "Ljdk/internal/org/objectweb/asm/Label;" +
+                            "Ljava/lang/String;)V");
+        }
 
         visitLabel(() -> mv.visitVarInsn(Opcodes.ALOAD, 1));
         tryBlock.run();
         visitLabel(() -> mv.visitVarInsn(Opcodes.ALOAD, 2));
         endTryBlock.run();
-        visitLabel(() -> mv.visitVarInsn(Opcodes.ALOAD, 3));
-        visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] { type }); // stack
-        catchBlock.run();
+
+        for (int i = 0; i < nbCatch; i++) {
+            int finalI = i;
+            Map.Entry<String, Runnable> catchEntry = multiCatchBlock.get(i);
+            visitLabel(() -> mv.visitVarInsn(Opcodes.ALOAD, 3 + finalI));
+            visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] { catchEntry.getKey() }); // stack
+            catchEntry.getValue().run();
+        }
     }
 
     @Override

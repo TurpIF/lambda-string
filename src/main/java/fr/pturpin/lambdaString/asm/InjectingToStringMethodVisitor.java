@@ -10,6 +10,12 @@ import org.objectweb.asm.Type;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.management.ManagementFactory;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -72,13 +78,47 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
 
         mmv.visitCode();
 
-        // NoClassDefFoundError in a BootstrapMethodError is thrown if lambda does not have any visibility on this agent classes.
-        // This happens when lambda is loaded by the bootstrap class loader but not this agent classes.
-        mmv.visitTryCatchBlock(() -> {
-            visitExternalToString(mmv);
-        }, () -> {
-            mmv.visitInsn(Opcodes.ARETURN);
-        }, () -> {
+        mmv.visitTryCatchBlock(() -> visitExternalToString(mmv),
+                () -> mmv.visitInsn(Opcodes.ARETURN),
+                getCatchBlocks(mmv));
+
+        mmv.visitMaxs(-1, -1); // Maxs computed by ClassWriter.COMPUTE_FRAMES, these arguments ignored
+        mmv.visitEnd();
+    }
+
+    /**
+     * Returns the appropriate catch blocks to handle potential visibility errors, such as
+     * {@link NoClassDefFoundError}, that may happen while getting the injected <code>toString</code>.
+     * <p>
+     * Those are specific to the JRE version:
+     * <ul>
+     * <li>JRE8: {@link NoClassDefFoundError} in a {@link BootstrapMethodError} is thrown if lambda does not have any
+     * visibility on this agent classes</li>
+     * <li>JRE9: {@link NoClassDefFoundError} is thrown if lambda does not have any visibility on this agent classes.
+     * This is currently only observed when agent is setup with <code>-javagent</code></li>
+     * </ul>
+     * <p>
+     * This happens when lambda is loaded by the bootstrap class loader but not this agent classes.
+     * See <code>classLoadedFromBootstrapClassLoaderAreNotSupported</code> test in <code>LambdaToStringAgentIT</code>
+     * and <code>LambdaStringTest</code> to reproduce this.
+     *
+     * @param mmv the meta method visitor to write code in lambda
+     * @return map of catch blocks by their supported {@link Throwable} class name
+     */
+    private Map<String, Runnable> getCatchBlocks(MetaMethodVisitor mmv) {
+        return detectJreVersion().map(version -> {
+            if (version == SupportedJreVersion.JRE_8) {
+                return getJdk8CatchBlocks(mmv);
+            } else if (version == SupportedJreVersion.JRE_9) {
+                return getJdk9CatchBlocks(mmv);
+            }
+            return null;
+        }).orElseGet(HashMap::new);
+    }
+
+    private Map<String, Runnable> getJdk8CatchBlocks(MetaMethodVisitor mmv) {
+        Map<String, Runnable> multiCatchBlocks = new HashMap<>();
+        multiCatchBlocks.put(Type.getInternalName(BootstrapMethodError.class), () -> {
             // if (!(e.getCause() instanceof NoClassDefFoundError)) throw e;
             Runnable newIf = () -> {
                 mmv.newLabel(); // ifInstanceOf
@@ -97,7 +137,7 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
 
             mmv.visitVarInsn(Opcodes.ALOAD, 1);
             mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    "java/lang/BootstrapMethodError",
+                    "java/lang/Throwable",
                     "getCause",
                     "()Ljava/lang/Throwable;",
                     false);
@@ -114,10 +154,17 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
             mmv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
             visitDefaultToString(mmv);
             mmv.visitInsn(Opcodes.ARETURN);
-        }, Type.getInternalName(BootstrapMethodError.class));
+        });
+        return multiCatchBlocks;
+    }
 
-        mmv.visitMaxs(-1, -1); // Maxs computed by ClassWriter.COMPUTE_FRAMES, these arguments ignored
-        mmv.visitEnd();
+    private Map<String, Runnable> getJdk9CatchBlocks(MetaMethodVisitor mmv) {
+        Map<String, Runnable> multiCatchBlocks = new HashMap<>();
+        multiCatchBlocks.put(Type.getInternalName(NoClassDefFoundError.class), () -> {
+            visitDefaultToString(mmv);
+            mmv.visitInsn(Opcodes.ARETURN);
+        });
+        return multiCatchBlocks;
     }
 
     /**
@@ -323,6 +370,20 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
                 "toString",
                 "()Ljava/lang/String;",
                 false);
+    }
+
+    private enum SupportedJreVersion { JRE_8, JRE_9 }
+
+    private static Optional<SupportedJreVersion> detectJreVersion() {
+        // For Java 9 and further, this should not change : https://bugs.openjdk.java.net/browse/JDK-8149519
+        PrivilegedAction<String> action = ManagementFactory.getRuntimeMXBean()::getSpecVersion;
+        String specVersion = AccessController.doPrivileged(action);
+        if ("1.8".equals(specVersion)) {
+            return Optional.of(SupportedJreVersion.JRE_8);
+        } else if ("9".equals(specVersion)) {
+            return Optional.of(SupportedJreVersion.JRE_9);
+        }
+        return Optional.empty();
     }
 
 }
