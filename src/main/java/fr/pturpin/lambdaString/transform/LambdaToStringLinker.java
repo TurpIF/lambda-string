@@ -23,10 +23,14 @@ public final class LambdaToStringLinker {
      * The given class name should represent a static {@link LambdaToStringStrategy} class name with a default
      * instantiable default constructor. If any error occurs, it's embedded in a {@link LambdaToStringLinkerException}.
      *
+     * @param caller            unused
+     * @param invokedName       unused
+     * @param invokedType       unused
      * @param strategyClassName Class name of {@link LambdaToStringStrategy} to link with
      * @return the CallSite whose target can be used to create a lambda <code>toString</code>
      * @throws LambdaToStringLinkerException if an error occurs while instantiating the new strategy
      */
+    @SuppressWarnings("unused")
     public static CallSite link(MethodHandles.Lookup caller,
             String invokedName,
             MethodType invokedType,
