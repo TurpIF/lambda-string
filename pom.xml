@@ -18,6 +18,7 @@
         <skipITs>${skipTests}</skipITs>
         <skipUTs>${skipTests}</skipUTs>
         <jmh.version>1.9.3</jmh.version>
+        <finalName>${project.artifactId}-${project.version}</finalName>
     </properties>
 
     <licenses>
@@ -69,6 +70,7 @@
     </dependencies>
 
     <build>
+        <finalName>${finalName}</finalName>
         <resources>
             <resource>
                 <directory>${project.basedir}/src/main/java</directory>

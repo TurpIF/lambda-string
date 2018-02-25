@@ -1,12 +1,31 @@
 stages:
   - build
   - package
-  - deploy
+  - benchmark
 
-maven-build:
+build:jdk8:
   image: maven:3-jdk-8
   stage: build
+  script: "mvn package -B -DfinalName=build"
+  artifacts:
+    paths:
+    - target/*.jar
+    expire_in: 20 minutes
+
+package:jdk8:
+  image: maven:3-jdk-8
+  stage: package
   script: "mvn verify -B"
   artifacts:
     paths:
       - target/*.jar
+
+benchmark:
+  image: java:latest
+  stage: benchmark
+  script: /usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar build-benchmark.jar > ./benchmark.log
+  dependencies:
+  - build:jdk8
+  artifacts:
+    paths:
+    - benchmark.log
