@@ -11,7 +11,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Measure the throughput of an injection of a constant string
+ * Measure the time duration of an injection of a constant string. It is expected that it's near a no-op duration.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @Fork(1)
-public class SimpleInjectionBenchmark {
+public class ConstantInjectionBenchmark {
 
     private static final String INJECTED = "injected";
 
