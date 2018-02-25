@@ -11,8 +11,8 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Compare the duration of an injection of a constant string. It is expected that it's near a no-op duration,
- * so a no-op measure is included.
+ * Compare the duration of an injection of a complex string corresponding to the original {@link Object#toString()}
+ * implementation.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -20,13 +20,11 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @Fork(1)
-public class ConstantInjectionBenchmark {
-
-    private static final String INJECTED = "injected";
+public class ComplexInjectionBenchmark {
 
     @Setup
     public static void setup() {
-        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), ConstantInjectionStrategy.class.getName());
+        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), ComplexInjectionStrategy.class.getName());
     }
 
     @State(Scope.Benchmark)
@@ -43,11 +41,6 @@ public class ConstantInjectionBenchmark {
             this.anonymousClass = newAnonymousLambda();
             this.staticClass = new StaticLambda();
         }
-    }
-
-    @Benchmark
-    public void noop(Blackhole bh) {
-        bh.consume(INJECTED);
     }
 
     @Benchmark
@@ -101,7 +94,7 @@ public class ConstantInjectionBenchmark {
             }
             @Override
             public String toString() {
-                return INJECTED;
+                return LambdaTestHolder.defaultToString(this);
             }
         };
     }
@@ -113,15 +106,15 @@ public class ConstantInjectionBenchmark {
 
         @Override
         public String toString() {
-            return INJECTED;
+            return LambdaTestHolder.defaultToString(this);
         }
     }
 
     @SuppressWarnings("unused")
-    private static final class ConstantInjectionStrategy implements LambdaToStringStrategy {
+    private static final class ComplexInjectionStrategy implements LambdaToStringStrategy {
         @Override
         public String createToString(Object lambda, LambdaMetaInfo metaInfo) {
-            return INJECTED;
+            return LambdaTestHolder.defaultToString(lambda);
         }
     }
 
