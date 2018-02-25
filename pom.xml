@@ -17,7 +17,7 @@
         <skipTests>false</skipTests>
         <skipITs>${skipTests}</skipITs>
         <skipUTs>${skipTests}</skipUTs>
-        <jmh.version>1.9.3</jmh.version>
+        <jmh.version>1.20</jmh.version>
         <finalName>${project.artifactId}-${project.version}</finalName>
     </properties>
 
@@ -41,7 +41,7 @@
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
-            <version>5.1</version>
+            <version>6.0</version>
         </dependency>
         <dependency>
             <groupId>com.ea.agentloader</groupId>
@@ -91,7 +91,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.6.1</version>
+                <version>3.7.0</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -126,6 +126,8 @@
                 <configuration>
                     <reuseForks>false</reuseForks>
                     <skipTests>${skipUTs}</skipTests>
+                    <!-- JDK9 disallow attaching new agent to the current VM by default: https://bugs.openjdk.java.net/browse/JDK-8180425 -->
+                    <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
                 </configuration>
                 <dependencies>
                     <dependency>

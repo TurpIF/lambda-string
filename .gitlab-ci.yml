@@ -3,7 +3,7 @@ stages:
   - package
 
 build:jdk8:
-  image: maven:3-jdk-8
+  image: maven:3.5.0-jdk-8
   stage: build
   script: "mvn package -B -DfinalName=build"
   artifacts:
@@ -12,12 +12,23 @@ build:jdk8:
     expire_in: 20 minutes
 
 package:jdk8:
-  image: maven:3-jdk-8
+  image: maven:3.5.0-jdk-8
   stage: package
   script: "mvn verify -B"
   artifacts:
     paths:
       - target/*.jar
+
+# Use the slim package because the normal one is unable to fetch plugins: https://github.com/carlossg/docker-maven/issues/50
+build:jdk9:
+  image: maven:3.5.0-jdk-9-slim
+  stage: build
+  script: "mvn package -B"
+
+package:jdk9:
+  image: maven:3.5.0-jdk-9-slim
+  stage: package
+  script: "mvn verify -B"
 
 benchmark:
   image: java:latest
