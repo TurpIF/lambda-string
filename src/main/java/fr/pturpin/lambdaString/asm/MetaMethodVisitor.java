@@ -184,6 +184,7 @@ public final class MetaMethodVisitor extends MethodVisitor {
     }
 
     @Override
+    @Deprecated
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
         throw new UnsupportedOperationException();
     }

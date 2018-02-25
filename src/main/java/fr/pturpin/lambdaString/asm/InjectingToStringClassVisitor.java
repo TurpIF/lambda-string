@@ -1,7 +1,6 @@
 package fr.pturpin.lambdaString.asm;
 
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -11,7 +10,7 @@ public final class InjectingToStringClassVisitor extends ClassVisitor {
 
     private final String toStringStrategyClassName;
 
-    public InjectingToStringClassVisitor(ClassWriter cw, String toStringStrategyClassName) {
+    public InjectingToStringClassVisitor(ClassVisitor cw, String toStringStrategyClassName) {
         super(Opcodes.ASM5, cw);
         this.toStringStrategyClassName = requireNonNull(toStringStrategyClassName);
     }
