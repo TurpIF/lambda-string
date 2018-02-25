@@ -1,7 +1,6 @@
 stages:
   - build
   - package
-  - benchmark
 
 build:jdk8:
   image: maven:3-jdk-8
@@ -22,8 +21,8 @@ package:jdk8:
 
 benchmark:
   image: java:latest
-  stage: benchmark
-  script: /usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar build-benchmark.jar > ./benchmark.log
+  stage: package
+  script: /usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar target/build-benchmarks.jar > ./benchmark.log
   dependencies:
   - build:jdk8
   artifacts:
