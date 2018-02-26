@@ -38,11 +38,18 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
     private static final String TO_STRING_DESC = Type.getMethodDescriptor(Type.getType(String.class));
     private static final String LAMBDA_META_INFO_NAME = Type.getInternalName(LambdaMetaInfo.class);
 
+    private final MethodVisitor mv;
     private final String toStringStrategyClassName;
 
     InjectingToStringMethodVisitor(MethodVisitor mv, String toStringStrategyClassName) {
         super(Opcodes.ASM5, mv);
+        this.mv = new ShiftingLocalIdMethodVisitor(Opcodes.ASM5, mv, 9);
         this.toStringStrategyClassName = requireNonNull(toStringStrategyClassName);
+    }
+
+    @Override
+    public void visitMaxs(int maxStack, int maxLocals) {
+        super.visitMaxs(10, 13);
     }
 
     @Override

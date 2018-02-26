@@ -5,14 +5,15 @@ import org.objectweb.asm.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 public final class MetaMethodVisitor extends MethodVisitor {
 
     private static final String NAME_METHOD_VISITOR = "jdk/internal/org/objectweb/asm/MethodVisitor";
 
     public MetaMethodVisitor(int api, MethodVisitor mv) {
-        super(api, Objects.requireNonNull(mv));
+        super(api, requireNonNull(mv));
     }
 
     @Override
@@ -245,7 +246,7 @@ public final class MetaMethodVisitor extends MethodVisitor {
     public void newLabel() {
         mv.visitTypeInsn(Opcodes.NEW, "jdk/internal/org/objectweb/asm/Label");
         mv.visitInsn(Opcodes.DUP);
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "jdk/internal/org/objectweb/asm/Label", "<init>", "()V", false);
+        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "jdk/internal/org/objectweb/asm/Label", "<init>", "()V", false);
     }
 
     public void visitTryCatchBlock(Runnable tryBlock, Runnable endTryBlock, Map<String, Runnable> multiCatchBlockByType) {

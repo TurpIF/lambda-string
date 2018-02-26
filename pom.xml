@@ -44,6 +44,18 @@
             <version>6.0</version>
         </dependency>
         <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-analysis</artifactId>
+            <version>6.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-util</artifactId>
+            <version>6.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.ea.agentloader</groupId>
             <artifactId>ea-agent-loader</artifactId>
             <version>1.0.2</version>

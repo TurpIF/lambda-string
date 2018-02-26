@@ -8,6 +8,8 @@ import static java.util.Objects.requireNonNull;
 
 public final class InjectingToStringClassVisitor extends ClassVisitor {
 
+    private static final String SPIN_INNER_CLASS_METHOD = "spinInnerClass";
+
     private final String toStringStrategyClassName;
 
     public InjectingToStringClassVisitor(ClassVisitor cw, String toStringStrategyClassName) {
@@ -27,6 +29,10 @@ public final class InjectingToStringClassVisitor extends ClassVisitor {
                 desc,
                 signature,
                 exceptions);
-        return new InjectingToStringMethodVisitor(mv, toStringStrategyClassName);
+
+        if (SPIN_INNER_CLASS_METHOD.equals(name)) {
+            return new InjectingToStringMethodVisitor(mv, toStringStrategyClassName);
+        }
+        return mv;
     }
 }
