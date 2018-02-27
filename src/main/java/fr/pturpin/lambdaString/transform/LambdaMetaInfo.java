@@ -14,16 +14,16 @@ public final class LambdaMetaInfo {
 
     private final Class<?> targetClass;
     private final int referenceKind;
-    private final String declaringClassName;
+    private final Class<?> declaringClass;
     private final String methodName;
     private final String methodDesc;
     private int declarationLine;
     private volatile boolean isDeclarationLineComputed;
 
-    public LambdaMetaInfo(Class<?> targetClass, int referenceKind, String declaringClassName, String methodName, String methodDesc) {
+    public LambdaMetaInfo(Class<?> targetClass, int referenceKind, Class<?> declaringClass, String methodName, String methodDesc) {
         this.targetClass = requireNonNull(targetClass);
         this.referenceKind = referenceKind;
-        this.declaringClassName = requireNonNull(declaringClassName);
+        this.declaringClass = requireNonNull(declaringClass);
         this.methodName = requireNonNull(methodName);
         this.methodDesc = requireNonNull(methodDesc);
         this.declarationLine = -1;
@@ -38,8 +38,8 @@ public final class LambdaMetaInfo {
         return referenceKind;
     }
 
-    public String getDeclaringClassName() {
-        return declaringClassName;
+    public Class<?> getDeclaringClass() {
+        return declaringClass;
     }
 
     public String getMethodName() {
@@ -61,16 +61,16 @@ public final class LambdaMetaInfo {
     }
 
     private int computeDeclarationLine() throws LambdaToStringException {
-        ClassLoader classLoader = getClass().getClassLoader();
         ClassReader cr;
-        String resourceName = declaringClassName + ".class";
+        ClassLoader classLoader = declaringClass.getClassLoader();
+        String resourceName = declaringClass.getName().replace('.', '/') + ".class";
         try (InputStream classStream = classLoader.getResourceAsStream(resourceName)) {
             if (classStream == null) {
                 throw new LambdaToStringException("Could not find resource " + resourceName);
             }
             cr = new ClassReader(classStream);
         } catch (IOException e) {
-            throw new LambdaToStringException("Could not read class " + declaringClassName, e);
+            throw new LambdaToStringException("Could not read class " + declaringClass, e);
         }
 
         int[] line = new int[]{ -1 };

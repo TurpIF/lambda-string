@@ -248,7 +248,7 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
         });
 
         mmv.visitLdcInsn(() -> {
-            // implInfo.getDeclaringClass().getName().replace('.', '/')
+            // implInfo.getDeclaringClass()
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitFieldInsn(Opcodes.GETFIELD,
                     INNER_CLASS_LAMBDA_METAFACTORY_NAME,
@@ -259,19 +259,10 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
                     "getDeclaringClass",
                     "()Ljava/lang/Class;",
                     true);
-            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    "java/lang/Class",
-                    "getName",
-                    "()Ljava/lang/String;",
-                    false);
-            mv.visitIntInsn(Opcodes.BIPUSH, '.');
-            mv.visitInsn(Opcodes.I2C);
-            mv.visitIntInsn(Opcodes.BIPUSH, '/');
-            mv.visitInsn(Opcodes.I2C);
-            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    "java/lang/String",
-                    "replace",
-                    "(CC)Ljava/lang/String;",
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                    "jdk/internal/org/objectweb/asm/Type",
+                    "getType",
+                    "(Ljava/lang/Class;)Ljdk/internal/org/objectweb/asm/Type;",
                     false);
         });
 
@@ -311,7 +302,7 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
         mmv.visitMethodInsn(Opcodes.INVOKESPECIAL,
                 LAMBDA_META_INFO_NAME,
                 "<init>",
-                MethodType.methodType(void.class, Class.class, int.class, String.class, String.class, String.class)
+                MethodType.methodType(void.class, Class.class, int.class, Class.class, String.class, String.class)
                         .toMethodDescriptorString(),
                 false);
 
