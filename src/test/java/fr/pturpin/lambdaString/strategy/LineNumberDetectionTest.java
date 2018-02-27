@@ -78,7 +78,7 @@ class LineNumberDetectionTest {
 
     private static final class OnlyLineToStringStrategy implements LambdaToStringStrategy {
         @Override
-        public String createToString(Object lambda, LambdaMetaInfo metaInfo) {
+        public String createToString(Object lambda, LambdaMetaInfo metaInfo) throws LambdaToStringException {
             return String.valueOf(metaInfo.getDeclarationLine().orElse(-1));
         }
     }

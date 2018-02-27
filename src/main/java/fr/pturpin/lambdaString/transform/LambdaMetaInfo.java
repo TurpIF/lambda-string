@@ -1,11 +1,12 @@
 package fr.pturpin.lambdaString.transform;
 
-import org.objectweb.asm.*;
+import fr.pturpin.lambdaString.asm.FetchingFirstLineNumberOfIndyClassVisitor;
+import fr.pturpin.lambdaString.strategy.LambdaToStringException;
+import org.objectweb.asm.ClassReader;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.OptionalInt;
-import java.util.function.IntConsumer;
 
 import static java.util.Objects.requireNonNull;
 
@@ -16,6 +17,8 @@ public final class LambdaMetaInfo {
     private final String declaringClassName;
     private final String methodName;
     private final String methodDesc;
+    private int declarationLine;
+    private volatile boolean isDeclarationLineComputed;
 
     public LambdaMetaInfo(Class<?> targetClass, int referenceKind, String declaringClassName, String methodName, String methodDesc) {
         this.targetClass = requireNonNull(targetClass);
@@ -23,6 +26,8 @@ public final class LambdaMetaInfo {
         this.declaringClassName = requireNonNull(declaringClassName);
         this.methodName = requireNonNull(methodName);
         this.methodDesc = requireNonNull(methodDesc);
+        this.declarationLine = -1;
+        this.isDeclarationLineComputed = false;
     }
 
     public Class<?> getTargetClass() {
@@ -45,69 +50,36 @@ public final class LambdaMetaInfo {
         return methodDesc;
     }
 
-    public OptionalInt getDeclarationLine() {
-        int line = 0;
-        try {
-            line = computeDeclarationLine();
-        } catch (IOException e) {
-            e.printStackTrace();
+    public OptionalInt getDeclarationLine() throws LambdaToStringException {
+        // Not really important to really sync the check. The output is expected to be constant and the worst case
+        // just computing this constant multiple times.
+        if (!isDeclarationLineComputed) {
+            isDeclarationLineComputed = true;
+            declarationLine = computeDeclarationLine();
         }
-        return line == -1 ? OptionalInt.empty() : OptionalInt.of(line);
+        return declarationLine == -1 ? OptionalInt.empty() : OptionalInt.of(declarationLine);
     }
 
-    private int computeDeclarationLine() throws IOException {
+    private int computeDeclarationLine() throws LambdaToStringException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        ClassReader cr;
+        String resourceName = declaringClassName + ".class";
+        try (InputStream classStream = classLoader.getResourceAsStream(resourceName)) {
+            if (classStream == null) {
+                throw new LambdaToStringException("Could not find resource " + resourceName);
+            }
+            cr = new ClassReader(classStream);
+        } catch (IOException e) {
+            throw new LambdaToStringException("Could not read class " + declaringClassName, e);
+        }
+
         int[] line = new int[]{ -1 };
-        InputStream classStream = getClass().getClassLoader().getResourceAsStream(declaringClassName + ".class");
-        ClassReader cr = new ClassReader(classStream);
-        FetchingLineNumberOfIndyClassVisitor visitor = new FetchingLineNumberOfIndyClassVisitor(
-                Opcodes.ASM5,
+        FetchingFirstLineNumberOfIndyClassVisitor visitor = new FetchingFirstLineNumberOfIndyClassVisitor(
                 methodName,
                 methodDesc,
                 foundLine -> line[0] = foundLine);
-        cr.accept(visitor, 0);
+        cr.accept(visitor, ClassReader.SKIP_FRAMES);
         return line[0];
-    }
-
-    private static final class FetchingLineNumberOfIndyClassVisitor extends ClassVisitor {
-
-        private final String methodName;
-        private final String methodDesc;
-        private final IntConsumer onLine;
-
-        FetchingLineNumberOfIndyClassVisitor(int api, String methodName, String methodDesc, IntConsumer onLine) {
-            super(api);
-            this.methodName = requireNonNull(methodName);
-            this.methodDesc = requireNonNull(methodDesc);
-            this.onLine = requireNonNull(onLine);
-        }
-
-        @Override
-        public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-            if (methodName.equals(name) && methodDesc.equals(desc)) {
-                return new FetchingLineNumberOfIndyMethodVisitor(api, onLine);
-            }
-            return null;
-        }
-    }
-
-    private static final class FetchingLineNumberOfIndyMethodVisitor extends MethodVisitor {
-
-        private final IntConsumer onLine;
-        private boolean lineFound;
-
-        FetchingLineNumberOfIndyMethodVisitor(int api, IntConsumer onLine) {
-            super(api);
-            this.onLine = requireNonNull(onLine);
-        }
-
-        @Override
-        public void visitLineNumber(int line, Label start) {
-            if (!lineFound) {
-                onLine.accept(line);
-                lineFound = true;
-            }
-        }
-
     }
 
 }
