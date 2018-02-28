@@ -63,6 +63,9 @@ public final class LambdaMetaInfo {
     private int computeDeclarationLine() throws LambdaToStringException {
         ClassReader cr;
         ClassLoader classLoader = declaringClass.getClassLoader();
+        if (classLoader == null) {
+            classLoader = ClassLoader.getSystemClassLoader();
+        }
         String resourceName = declaringClass.getName().replace('.', '/') + ".class";
         try (InputStream classStream = classLoader.getResourceAsStream(resourceName)) {
             if (classStream == null) {
