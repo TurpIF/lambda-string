@@ -233,20 +233,6 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
                     false);
         });
 
-        mmv.visitIntInsn(Opcodes.SIPUSH, () -> {
-            // implInfo.getReferenceKind()
-            mv.visitVarInsn(Opcodes.ALOAD, 0);
-            mv.visitFieldInsn(Opcodes.GETFIELD,
-                    INNER_CLASS_LAMBDA_METAFACTORY_NAME,
-                    "implInfo",
-                    "Ljava/lang/invoke/MethodHandleInfo;");
-            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
-                    "java/lang/invoke/MethodHandleInfo",
-                    "getReferenceKind",
-                    "()I",
-                    true);
-        });
-
         mmv.visitLdcInsn(() -> {
             // implInfo.getDeclaringClass()
             mv.visitVarInsn(Opcodes.ALOAD, 0);
@@ -299,10 +285,44 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
                     false);
         });
 
+        mmv.visitIntInsn(Opcodes.SIPUSH, () -> {
+            // implInfo.getReferenceKind()
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitFieldInsn(Opcodes.GETFIELD,
+                    INNER_CLASS_LAMBDA_METAFACTORY_NAME,
+                    "implInfo",
+                    "Ljava/lang/invoke/MethodHandleInfo;");
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                    "java/lang/invoke/MethodHandleInfo",
+                    "getReferenceKind",
+                    "()I",
+                    true);
+        });
+
+        mmv.visitIntInsn(Opcodes.SIPUSH, () -> {
+            // implInfo.getModifiers()
+            mv.visitVarInsn(Opcodes.ALOAD, 0);
+            mv.visitFieldInsn(Opcodes.GETFIELD,
+                    INNER_CLASS_LAMBDA_METAFACTORY_NAME,
+                    "implInfo",
+                    "Ljava/lang/invoke/MethodHandleInfo;");
+            mv.visitMethodInsn(Opcodes.INVOKEINTERFACE,
+                    "java/lang/invoke/MethodHandleInfo",
+                    "getModifiers",
+                    "()I",
+                    true);
+        });
+
         mmv.visitMethodInsn(Opcodes.INVOKESPECIAL,
                 LAMBDA_META_INFO_NAME,
                 "<init>",
-                MethodType.methodType(void.class, Class.class, int.class, Class.class, String.class, String.class)
+                MethodType.methodType(void.class,
+                        Class.class,
+                        Class.class,
+                        String.class,
+                        String.class,
+                        int.class,
+                        int.class)
                         .toMethodDescriptorString(),
                 false);
 

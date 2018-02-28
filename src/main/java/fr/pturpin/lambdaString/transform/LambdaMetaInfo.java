@@ -13,19 +13,27 @@ import static java.util.Objects.requireNonNull;
 public final class LambdaMetaInfo {
 
     private final Class<?> targetClass;
-    private final int referenceKind;
     private final Class<?> declaringClass;
     private final String methodName;
     private final String methodDesc;
+    private final int referenceKind;
+    private final int modifers;
     private int declarationLine;
     private volatile boolean isDeclarationLineComputed;
 
-    public LambdaMetaInfo(Class<?> targetClass, int referenceKind, Class<?> declaringClass, String methodName, String methodDesc) {
+    public LambdaMetaInfo(
+            Class<?> targetClass,
+            Class<?> declaringClass,
+            String methodName,
+            String methodDesc,
+            int referenceKind,
+            int modifers) {
         this.targetClass = requireNonNull(targetClass);
-        this.referenceKind = referenceKind;
         this.declaringClass = requireNonNull(declaringClass);
         this.methodName = requireNonNull(methodName);
         this.methodDesc = requireNonNull(methodDesc);
+        this.referenceKind = referenceKind;
+        this.modifers = modifers;
         this.declarationLine = -1;
         this.isDeclarationLineComputed = false;
     }
@@ -36,6 +44,10 @@ public final class LambdaMetaInfo {
 
     public int getReferenceKind() {
         return referenceKind;
+    }
+
+    public int getModifers() {
+        return modifers;
     }
 
     public Class<?> getDeclaringClass() {
