@@ -1,5 +1,6 @@
 package fr.pturpin.lambdaString.agent;
 
+import fr.pturpin.lambdaString.strategy.DefaultToStringStrategy;
 import fr.pturpin.lambdaString.strategy.LambdaToStringStrategy;
 import fr.pturpin.lambdaString.transform.InnerClassLambdaMetafactoryTransformer;
 import fr.pturpin.lambdaString.transform.LambdaToStringLinker;
@@ -17,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * to {@link java.lang.reflect.Constructor#setAccessible(boolean) set it accessible} but may failed because of a
  * {@link SecurityManager}.
  * <p>
- * If no class parameter is given, this agent does nothing and returns silently.
+ * If no class parameter is given, this agent use the {@link DefaultToStringStrategy} strategy.
  * <p>
  * If an error occurs because the given strategy class name is invalid, a {@link RuntimeException} containing the
  * {@link LambdaToStringLinkerException} cause is thrown while loading this agent.
@@ -44,7 +45,7 @@ public final class LambdaToStringAgent {
 
     public static void premain(String agentArgs, Instrumentation inst) {
         if (agentArgs == null || agentArgs.isEmpty()) {
-            return;
+            agentArgs = DefaultToStringStrategy.class.getName();
         }
 
         try {
