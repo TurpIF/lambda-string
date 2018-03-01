@@ -21,7 +21,7 @@ public class MyClass {
 
 ## Usage
 
-The injection is made by activating this agent :
+The injection is made by activating this agent : [lambdaString-0.1.jar](https://gitlab.com/TurpIF/lambda-to-string/uploads/6a07a595f55004cb70bb6aa876fb0d6c/lambdaString-0.1.jar)
 ```shell
 # Using the default toString strategy
 java -javaagent:path/to/lambdaString-0.1.jar
