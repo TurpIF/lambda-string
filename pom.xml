@@ -17,8 +17,9 @@
         <skipTests>false</skipTests>
         <skipITs>${skipTests}</skipITs>
         <skipUTs>${skipTests}</skipUTs>
-        <jmh.version>1.20</jmh.version>
         <finalName>${project.artifactId}-${project.version}</finalName>
+        <asm.version>6.0</asm.version>
+        <jmh.version>1.20</jmh.version>
     </properties>
 
     <licenses>
@@ -37,22 +38,28 @@
         </developer>
     </developers>
 
+    <scm>
+        <connection>scm:git:https://gitlab.com/TurpIF/lambda-to-string.git</connection>
+        <developerConnection>ssh://git@gitlab.com:TurpIF/lambda-to-string.git</developerConnection>
+        <url>https://gitlab.com/TurpIF/lambda-to-string</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
-            <version>6.0</version>
+            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-analysis</artifactId>
-            <version>6.0</version>
+            <version>${asm.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-util</artifactId>
-            <version>6.0</version>
+            <version>${asm.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
