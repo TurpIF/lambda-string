@@ -17,7 +17,44 @@ public class MyClass {
         return true;
     }
 }
+`
+
+## Why
+
+This question is legitimate because a lambda should be restrained in a small scope
+So, reading code using lambda should be simple and direct
+Althought, projects may grow quickly as their technical debt
+This agent may help you in that case : when you lose the control of your lambda, and you can't tell which one is it
+
+```java
+@FunctionalInterface
+interface Foo {
+    void foo()
+}
+
+public static Foo createFoo(int param) {
+    switch (param) {
+    case 1:
+        return () -> { /* do 1 */ }
+    case 2:
+        return () -> { /* do 2 */ }
+    /* ... */
+    defaul :
+        return () -> { /* do default */ }
+    }
+}
+
+public static void main(String[] args) {
+ Foo foo = createFoo(Integer.valueOf(args[1]));
+ /* We have a foo, but which one ? The injected toString will tell you */
+}
+
 ```
+
+In this sample, the lambda is chosen from a runtime value.
+While debugging, if you put a breakpoint after the generation of the lambda, you can't tell which one it is.
+The agent let you know this information through the toString of the lambda.
+
 
 ## Usage
 
