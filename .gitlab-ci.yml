@@ -30,6 +30,11 @@ package:jdk9:
   stage: package
   script: "mvn verify -B"
 
+test-ibmjava8:
+  image: maven:3.5.0-ibmjava-8-alpine
+  stage: package
+  script: "mvn verify -B"
+
 benchmark:
   image: java:latest
   stage: package
