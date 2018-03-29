@@ -4,7 +4,7 @@ Lambda-to-string (LTS) is a helping java agent that inject configurable toString
 
 LTS comes with a default toString strategy that print the origin of the lambdas. This feature let you easily track their origin while debugging as shown below :
 
-![With and without the agent](https://gitlab.com/TurpIF/lambda-to-string/master/doc/with-without.gif)
+![With and without the agent](https://gitlab.com/TurpIF/lambda-to-string/raw/master/doc/with-without.gif)
 
 ## Usage
 
@@ -32,7 +32,7 @@ To activate the LTS agent using IntelliJ, please use the following:
 - Download the [lambdaString-0.1.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8)
 - Add `-javaagent:/path/to/lambdaString-0.1.jar` in the "VM options" of your debugging configuration
 
-![Intellij hint](https://gitlab.com/TurpIF/lambda-to-string/master/doc/intellij-hint.png)
+![Intellij hint](https://gitlab.com/TurpIF/lambda-to-string/raw/master/doc/intellij-usage.png)
 
 
 To activate the LTS agent with custom toString stratagy, please use the following:
