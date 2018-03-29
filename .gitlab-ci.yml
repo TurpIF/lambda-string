@@ -14,7 +14,7 @@ variables:
   MAVEN_DYN_CLI_OPTS: '--batch-mode --errors --fail-at-end --show-version $([ -n "$DEBUG" ] && echo "-Dit.debug.remote=$DEBUG")'
   MAVEN_CLI_OPTS: 'echo "$MAVEN_DYN_CLI_OPTS"'
 
-  JDK_AGENT_VERSION: "maven:3.5.0-jdk-8"
+  JDK_AGENT_VERSION: "maven:3.5-jdk-8"
 
 # Cache downloaded dependencies and plugins between builds.
 # To keep cache across branches add 'key: "$CI_JOB_REF_NAME"'
@@ -57,15 +57,19 @@ package:jdk8:
 
 test-jre8:
   <<: *test
-  image: maven:3.5.0-jdk-8-slim
+  image: maven:3.5-jdk-8-slim
 
 test-jre9:
   <<: *test
-  image: maven:3.5.0-jdk-9-slim
+  image: maven:3.5-jdk-9-slim
+
+test-jre10:
+  <<: *test
+  image: maven:3.5-jdk-10-slim
 
 test-jre8-ibm:
   <<: *test
-  image: maven:3.5.0-ibmjava-8-alpine
+  image: maven:3.5-ibmjava-8-alpine
 
 benchmark:
   image: java:latest
