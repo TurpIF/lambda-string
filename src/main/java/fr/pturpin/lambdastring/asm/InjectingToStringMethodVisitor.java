@@ -1,5 +1,6 @@
 package fr.pturpin.lambdastring.asm;
 
+import fr.pturpin.lambdastring.strategy.LambdaToStringException;
 import fr.pturpin.lambdastring.strategy.LambdaToStringStrategy;
 import fr.pturpin.lambdastring.transform.LambdaMetaInfo;
 import fr.pturpin.lambdastring.transform.LambdaToStringLinker;
@@ -10,12 +11,8 @@ import org.objectweb.asm.Type;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.management.ManagementFactory;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -94,8 +91,11 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
     }
 
     /**
-     * Returns the appropriate catch blocks to handle potential visibility errors, such as
-     * {@link NoClassDefFoundError}, that may happen while getting the injected <code>toString</code>.
+     * Rethrows {@link fr.pturpin.lambdastring.strategy.LambdaToStringException} but catch all other exceptions
+     * and execute the {@link Object#toString()}.
+     * <p>
+     * Thrown exceptions are potential visibility errors, such as {@link NoClassDefFoundError}, that may happen while
+     * getting the injected <code>toString</code>.
      * <p>
      * Those are specific to the JRE version:
      * <ul>
@@ -113,27 +113,16 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
      * @return map of catch blocks by their supported {@link Throwable} class name
      */
     private Map<String, Runnable> getCatchBlocks(MetaMethodVisitor mmv) {
-        return detectJreVersion().map(version -> {
-            if (version == SupportedJreVersion.JRE_8) {
-                return getJdk8CatchBlocks(mmv);
-            } else if (version == SupportedJreVersion.JRE_9) {
-                return getJdk9CatchBlocks(mmv);
-            }
-            return null;
-        }).orElseGet(HashMap::new);
-    }
-
-    private Map<String, Runnable> getJdk8CatchBlocks(MetaMethodVisitor mmv) {
-        Map<String, Runnable> multiCatchBlocks = new HashMap<>();
-        multiCatchBlocks.put(Type.getInternalName(BootstrapMethodError.class), () -> {
-            // if (!(e.getCause() instanceof NoClassDefFoundError)) throw e;
+        Map<String, Runnable> catchBlocks = new HashMap<>();
+        catchBlocks.put(Type.getInternalName(Throwable.class), () -> {
+            // if (e instanceof LambdaToStringException) throw e;
             Runnable newIf = () -> {
-                mmv.newLabel(); // ifInstanceOf
+                mmv.newLabel();
                 mv.visitVarInsn(Opcodes.ASTORE, 2);
             };
             Runnable pushIf = () -> mv.visitVarInsn(Opcodes.ALOAD, 2);
             Runnable newElse = () -> {
-                mmv.newLabel(); // ifInstanceOf
+                mmv.newLabel();
                 mv.visitVarInsn(Opcodes.ASTORE, 3);
             };
             Runnable pushElse = () -> mv.visitVarInsn(Opcodes.ALOAD, 3);
@@ -142,14 +131,27 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
             newIf.run();
             newElse.run();
 
+            // Lambda loaded during bootstrap does not have access to the lambda exception class.
+            // So the instanceof should be simulated by checking the exception class name.
+            // e.getClass().getName().equals(LambdaToStringException.class.getName())
+            mmv.visitLdcInsn(LambdaToStringException.class.getName());
             mmv.visitVarInsn(Opcodes.ALOAD, 1);
             mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                    "java/lang/Throwable",
-                    "getCause",
-                    "()Ljava/lang/Throwable;",
-                    false);
-            mmv.visitTypeInsn(Opcodes.INSTANCEOF, "java/lang/NoClassDefFoundError");
-            mmv.visitJumpInsn(Opcodes.IFNE, pushElse);
+                Type.getInternalName(Throwable.class),
+                "getClass",
+                Type.getMethodDescriptor(Type.getType(Class.class)),
+                false);
+            mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                Type.getInternalName(Class.class),
+                "getName",
+                Type.getMethodDescriptor(Type.getType(String.class)),
+                false);
+            mmv.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                Type.getInternalName(String.class),
+                "equals",
+                Type.getMethodDescriptor(Type.getType(boolean.class), Type.getType(Object.class)),
+                false);
+            mmv.visitJumpInsn(Opcodes.IFEQ, pushElse);
 
             // If instanceof
             mmv.visitLabel(pushIf);
@@ -162,16 +164,7 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
             visitDefaultToString(mmv);
             mmv.visitInsn(Opcodes.ARETURN);
         });
-        return multiCatchBlocks;
-    }
-
-    private Map<String, Runnable> getJdk9CatchBlocks(MetaMethodVisitor mmv) {
-        Map<String, Runnable> multiCatchBlocks = new HashMap<>();
-        multiCatchBlocks.put(Type.getInternalName(NoClassDefFoundError.class), () -> {
-            visitDefaultToString(mmv);
-            mmv.visitInsn(Opcodes.ARETURN);
-        });
-        return multiCatchBlocks;
+        return catchBlocks;
     }
 
     /**
@@ -388,20 +381,6 @@ public class InjectingToStringMethodVisitor extends MethodVisitor {
                 "toString",
                 "()Ljava/lang/String;",
                 false);
-    }
-
-    private enum SupportedJreVersion { JRE_8, JRE_9 }
-
-    private static Optional<SupportedJreVersion> detectJreVersion() {
-        // For Java 9 and further, this should not change : https://bugs.openjdk.java.net/browse/JDK-8149519
-        PrivilegedAction<String> action = ManagementFactory.getRuntimeMXBean()::getSpecVersion;
-        String specVersion = AccessController.doPrivileged(action);
-        if ("1.8".equals(specVersion)) {
-            return Optional.of(SupportedJreVersion.JRE_8);
-        } else if ("9".equals(specVersion)) {
-            return Optional.of(SupportedJreVersion.JRE_9);
-        }
-        return Optional.empty();
     }
 
 }
