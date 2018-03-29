@@ -2,13 +2,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>fr.pturpin.lambdaString</groupId>
-    <artifactId>lambdaString</artifactId>
+    <groupId>fr.pturpin.lambdastring</groupId>
+    <artifactId>lambda-string</artifactId>
     <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>lambdaString</name>
-    <description>Small library to inject custom toString method on all lambda for debugging purpose</description>
+    <name>lambda-string</name>
+    <description>Lambda-string (LS) is a helping java agent that inject configurable toString method into lambdas with some useful meta-information</description>
     <url>https://gitlab.com/TurpIF/lambda-to-string</url>
 
     <properties>
@@ -33,7 +33,7 @@
         <developer>
             <id>pturpin</id>
             <name>Pierre Turpin</name>
-            <email>lambdaString@pturpin.fr</email>
+            <email>lambda-string@pturpin.fr</email>
         </developer>
     </developers>
 
@@ -172,7 +172,7 @@
                         </goals>
                         <configuration>
                             <argLine>
-                                -javaagent:${project.build.directory}/${project.build.finalName}.${project.packaging}=fr.pturpin.lambdaString.agent.LambdaToStringAgentIT$ITLambdaToStringStrategy
+                                -javaagent:${project.build.directory}/${project.build.finalName}.${project.packaging}=fr.pturpin.lambdastring.agent.LambdaToStringAgentIT$ITLambdaToStringStrategy
                             </argLine>
                         </configuration>
                     </execution>

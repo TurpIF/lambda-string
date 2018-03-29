@@ -1,21 +1,21 @@
-# lambda-to-string [![build status](https://gitlab.com/TurpIF/lambda-to-string/badges/master/build.svg)](https://gitlab.com/TurpIF/lambda-to-string/commits/master)
+# lambda-string [![build status](https://gitlab.com/TurpIF/lambda-to-string/badges/master/build.svg)](https://gitlab.com/TurpIF/lambda-to-string/commits/master)
 
-Lambda-to-string (LTS) is a helping java agent that inject configurable toString method into lambdas with some useful meta-information.
+Lambda-string (LS) is a helping java agent that inject configurable toString method into lambdas with some useful meta-information.
 
-LTS comes with a default toString strategy that print the origin of the lambdas. This feature let you easily track their origin while debugging as shown below :
+LS comes with a default toString strategy that print the origin of the lambdas. This feature let you easily track their origin while debugging as shown below :
 
 ![With and without the agent](https://gitlab.com/TurpIF/lambda-to-string/raw/master/doc/with-without.gif)
 
 ## Usage
 
-The most recent release is [LTS 0.1](https://gitlab.com/TurpIF/lambda-to-string/tags/v0.1).
+The most recent release is [LS 0.1](https://gitlab.com/TurpIF/lambda-to-string/tags/v0.1).
 
-To activate the LTS agent in general, please use the following:
+To activate the LS agent in general, please use the following:
 - Download the [lambdaString-0.1.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8)
 - Add `-javaagent:/path/to/lambdaString-0.1.jar` in your java options
 
 
-To activate the LTS agent using remote debugger, please use the following:
+To activate the LS agent using remote debugger, please use the following:
 ```shell
 # Download JAR
 wget -O /tmp/lambdaString-0.1.jar "https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8"
@@ -28,14 +28,14 @@ java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -javaage
 ```
 
 
-To activate the LTS agent using IntelliJ, please use the following:
+To activate the LS agent using IntelliJ, please use the following:
 - Download the [lambdaString-0.1.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8)
 - Add `-javaagent:/path/to/lambdaString-0.1.jar` in the "VM options" of your debugging configuration
 
 ![Intellij hint](https://gitlab.com/TurpIF/lambda-to-string/raw/master/doc/intellij-usage.png)
 
 
-To activate the LTS agent with custom toString stratagy, please use the following:
+To activate the LS agent with custom toString stratagy, please use the following:
 - Download the [lambdaString-0.1.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8)
 - Add `-javaagent:/path/to/lambdaString-0.1.jar=my.custom.ToStringStrategy` in your java options
 
@@ -80,7 +80,7 @@ public class Main {
 
 In the above sample, the lambda is chosen from a runtime value.
 While debugging, if you put a breakpoint after the generation of the lambda, you can't tell which lambda is returned by the method.
-By activating the LTS agent, the lambda origin is available through it's toString evaluation.
+By activating the LS agent, the lambda origin is available through it's toString evaluation.
 
 ## Injecting custom toString
 
@@ -105,7 +105,7 @@ retransformable and then not injectable.
 #### Attaching the agent during a JVM runtime is not well supported:
 
 It is possible to attach an agent to a running JVM.
-But LTS does not support injecting toString in lambdas that are already loaded by the JVM.
+But LS does not support injecting toString in lambdas that are already loaded by the JVM.
 
 ## Supported JVMs
 
