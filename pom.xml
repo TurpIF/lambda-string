@@ -172,7 +172,7 @@
                         </goals>
                         <configuration>
                             <argLine>
-                                -javaagent:${project.build.directory}/${project.build.finalName}.${project.packaging}=fr.pturpin.lambdastring.agent.LambdaToStringAgentIT$ITLambdaToStringStrategy
+                                -javaagent:${project.build.directory}/${project.build.finalName}.${project.packaging}=fr.pturpin.lambdastring.agent.LambdaAgentLoader$DynamicLambdaToStringStrategy -Dfr.pturpin.lambdastring.test.agent.loader.for-integration=true
                             </argLine>
                         </configuration>
                     </execution>

@@ -4,6 +4,7 @@ import fr.pturpin.lambdastring.LambdaTestHolder;
 import fr.pturpin.lambdastring.LambdaTestHolder.Lambda;
 import fr.pturpin.lambdastring.strategy.LambdaToStringStrategy;
 import fr.pturpin.lambdastring.transform.LambdaMetaInfo;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.function.Function;
@@ -11,14 +12,14 @@ import java.util.function.Function;
 import static fr.pturpin.lambdastring.LambdaTestHolder.defaultToString;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * IT of the {@link LambdaToStringAgent} agent.
- * This test should be called with the agent set and with {@link ITLambdaToStringStrategy} class name as parameter :<br>
- * <code>-javaagent:&lt;path-to-agent-jar&gt;=fr.pturpin.lambdastring.agent.LambdaToStringAgentIT$ITLambdaToStringStrategy</code>
- */
 class LambdaToStringAgentIT {
 
     private static final String INJECTED_TO_STRING = "injected";
+
+    @BeforeAll
+    static void beforeAll() {
+        LambdaAgentLoader.loadAgent(ITLambdaToStringStrategy.class.getName());
+    }
 
     @Test
     void classLoadedFromBootstrapClassLoaderAreNotSupported() throws Exception {
