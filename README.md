@@ -109,7 +109,8 @@ But LS does not support injecting toString in lambdas that are already loaded by
 
 ## Supported JVMs
 
-Here is the list of the tested and working JVMs:
+Here is the list of the tested and working JREs:
 - HotSpot JVM 1.8
 - HotSpot JVM 1.9
+- IBM J9 VM (JRE 8)
 
