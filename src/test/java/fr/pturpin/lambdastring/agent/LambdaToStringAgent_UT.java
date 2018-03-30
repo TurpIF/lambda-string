@@ -5,32 +5,31 @@ import fr.pturpin.lambdastring.transform.LambdaMetaInfo;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.lang.instrument.ClassDefinition;
-import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.lang.instrument.UnmodifiableClassException;
-import java.util.jar.JarFile;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 class LambdaToStringAgent_UT {
 
     @Test
-    void agentShouldThrowIfItsInvalid() throws Exception {
-        Assertions.assertThatThrownBy(() -> loadAgent("unexisting agent class"));
+    void agentShouldThrowIfItsInvalid() {
+        Assertions.assertThatThrownBy(() -> loadAgent("unexisting agent class")).isNotNull();
     }
 
     @Test
-    void agentIsLoadableOnlyOnce() throws Exception {
+    void agentIsLoadableOnlyOnce() {
         loadAgent(EmptyToStringStrategy.class.getName());
 
         // Calling again with the same argument is allowed
         loadAgent(EmptyToStringStrategy.class.getName());
 
         // Calling again with an other argument is forbidden
-        Assertions.assertThatThrownBy(() -> loadAgent(EmptyToStringStrategyBis.class.getName()));
+        Assertions.assertThatThrownBy(() -> loadAgent(EmptyToStringStrategyBis.class.getName())).isNotNull();
     }
 
     private static void loadAgent(String agentArgs) {
-        LambdaToStringAgent.premain(agentArgs, new DummyInstrumentation());
+        LambdaToStringAgent.premain(agentArgs, dummyInstrumentation());
     }
 
     private static final class EmptyToStringStrategy implements LambdaToStringStrategy {
@@ -47,81 +46,21 @@ class LambdaToStringAgent_UT {
         }
     }
 
-    private static final class DummyInstrumentation implements Instrumentation {
+    private static Instrumentation dummyInstrumentation() {
+        // Use a proxy because the JDK9 add a new method in the Instrumentation interface.
+        Object proxy = Proxy.newProxyInstance(
+            LambdaToStringAgent_UT.class.getClassLoader(),
+            new Class[]{Instrumentation.class},
+            new NoOpHandler());
+        return (Instrumentation) proxy;
+    }
 
-        @Override
-        public void addTransformer(ClassFileTransformer classFileTransformer, boolean b) {
-
-        }
-
-        @Override
-        public void addTransformer(ClassFileTransformer classFileTransformer) {
-
-        }
-
-        @Override
-        public boolean removeTransformer(ClassFileTransformer classFileTransformer) {
-            return false;
-        }
-
-        @Override
-        public boolean isRetransformClassesSupported() {
-            return false;
-        }
-
-        @Override
-        public void retransformClasses(Class<?>... classes) throws UnmodifiableClassException {
-
-        }
-
-        @Override
-        public boolean isRedefineClassesSupported() {
-            return false;
-        }
-
-        @Override
-        public void redefineClasses(ClassDefinition... classDefinitions) throws ClassNotFoundException, UnmodifiableClassException {
-
-        }
-
-        @Override
-        public boolean isModifiableClass(Class<?> aClass) {
-            return false;
-        }
-
-        @Override
-        public Class[] getAllLoadedClasses() {
-            return new Class[0];
-        }
-
-        @Override
-        public Class[] getInitiatedClasses(ClassLoader classLoader) {
-            return new Class[0];
-        }
-
-        @Override
-        public long getObjectSize(Object o) {
-            return 0;
-        }
-
-        @Override
-        public void appendToBootstrapClassLoaderSearch(JarFile jarFile) {
-
-        }
-
-        @Override
-        public void appendToSystemClassLoaderSearch(JarFile jarFile) {
-
-        }
-
-        @Override
-        public boolean isNativeMethodPrefixSupported() {
-            return false;
-        }
-
-        @Override
-        public void setNativeMethodPrefix(ClassFileTransformer classFileTransformer, String s) {
-
+    private static final class NoOpHandler implements InvocationHandler {
+        public Object invoke(Object proxy, Method method, Object[] args) {
+            if (boolean.class.equals(method.getReturnType())) {
+                return false;
+            }
+            return null;
         }
     }
 
