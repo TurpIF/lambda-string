@@ -1,9 +1,8 @@
 package fr.pturpin.lambdastring.strategy;
 
-import com.ea.agentloader.AgentLoader;
 import fr.pturpin.lambdastring.StaticLambdaHolder;
 import fr.pturpin.lambdastring.StaticMethodRefHolder;
-import fr.pturpin.lambdastring.agent.LambdaToStringAgent;
+import fr.pturpin.lambdastring.agent.LambdaAgentLoader;
 import fr.pturpin.lambdastring.transform.LambdaMetaInfo;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,7 @@ class LineNumberDetectionTest {
 
     @BeforeAll
     static void beforeAll() {
-        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), OnlyLineToStringStrategy.class.getName());
+        LambdaAgentLoader.loadAgent(OnlyLineToStringStrategy.class.getName());
     }
 
     @Test

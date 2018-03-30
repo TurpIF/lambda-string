@@ -1,8 +1,7 @@
 package fr.pturpin.lambdastring;
 
-import com.ea.agentloader.AgentLoader;
 import fr.pturpin.lambdastring.LambdaTestHolder.Lambda;
-import fr.pturpin.lambdastring.agent.LambdaToStringAgent;
+import fr.pturpin.lambdastring.agent.LambdaAgentLoader;
 import fr.pturpin.lambdastring.strategy.LambdaToStringStrategy;
 import fr.pturpin.lambdastring.transform.LambdaMetaInfo;
 import org.openjdk.jmh.annotations.*;
@@ -24,7 +23,7 @@ public class ComplexInjectionBenchmark {
 
     @Setup
     public static void setup() {
-        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), ComplexInjectionStrategy.class.getName());
+        LambdaAgentLoader.loadAgent(ComplexInjectionStrategy.class.getName());
     }
 
     @State(Scope.Benchmark)

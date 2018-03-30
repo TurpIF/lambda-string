@@ -1,18 +1,16 @@
 package fr.pturpin.lambdastring.agent;
 
-import com.ea.agentloader.AgentLoader;
 import fr.pturpin.lambdastring.StaticLambdaHolder;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-class DefaultLambdaToStringAgent {
+class DefaultLambdaToStringAgentTest {
 
     @Test
     void agentShouldUseDefaultStrategyIfNoneIsGiven() throws Exception {
-        assertThatCode(() -> AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(),
-                "")).doesNotThrowAnyException();
+        assertThatCode(() -> LambdaAgentLoader.loadAgent("")).doesNotThrowAnyException();
         assertThat(StaticLambdaHolder.STATIC_LAMBDA.toString()).startsWith("StaticLambdaHolder");
     }
 

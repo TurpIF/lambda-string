@@ -1,9 +1,8 @@
 package fr.pturpin.lambdastring.transform;
 
-import com.ea.agentloader.AgentLoader;
 import fr.pturpin.lambdastring.LambdaTestHolder;
 import fr.pturpin.lambdastring.LambdaTestHolder.Lambda;
-import fr.pturpin.lambdastring.agent.LambdaToStringAgent;
+import fr.pturpin.lambdastring.agent.LambdaAgentLoader;
 import fr.pturpin.lambdastring.strategy.LambdaToStringStrategy;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,7 @@ class LambdaToStringLinkerTest {
 
     @BeforeAll
     static void beforeAll() {
-        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), CountingCallsToStringStrategy.class.getName());
+        LambdaAgentLoader.loadAgent(CountingCallsToStringStrategy.class.getName());
     }
 
     @Test

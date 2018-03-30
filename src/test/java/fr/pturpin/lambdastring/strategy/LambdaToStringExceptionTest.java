@@ -1,8 +1,7 @@
 package fr.pturpin.lambdastring.strategy;
 
-import com.ea.agentloader.AgentLoader;
 import fr.pturpin.lambdastring.LambdaTestHolder.Lambda;
-import fr.pturpin.lambdastring.agent.LambdaToStringAgent;
+import fr.pturpin.lambdastring.agent.LambdaAgentLoader;
 import fr.pturpin.lambdastring.transform.LambdaMetaInfo;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,7 +11,7 @@ class LambdaToStringExceptionTest {
 
     @BeforeAll
     static void beforeAll() {
-        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), ThrowingLambdaToStringStrategy.class.getName());
+        LambdaAgentLoader.loadAgent(ThrowingLambdaToStringStrategy.class.getName());
     }
 
     @Test

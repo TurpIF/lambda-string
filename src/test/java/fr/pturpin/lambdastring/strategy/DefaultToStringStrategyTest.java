@@ -1,9 +1,8 @@
 package fr.pturpin.lambdastring.strategy;
 
-import com.ea.agentloader.AgentLoader;
 import fr.pturpin.lambdastring.StaticLambdaHolder;
 import fr.pturpin.lambdastring.StaticMethodRefHolder;
-import fr.pturpin.lambdastring.agent.LambdaToStringAgent;
+import fr.pturpin.lambdastring.agent.LambdaAgentLoader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +12,7 @@ class DefaultToStringStrategyTest {
 
     @BeforeAll
     static void beforeAll() {
-        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), DefaultToStringStrategy.class.getName());
+        LambdaAgentLoader.loadAgent(DefaultToStringStrategy.class.getName());
     }
 
     @Test
@@ -94,7 +93,7 @@ class DefaultToStringStrategyTest {
     @Test
     void testMethodRefWithArgument() throws Exception {
         FooInterface foo = DefaultToStringStrategyTest::foo;
-        assertThat(foo.toString()).isEqualTo("DefaultToStringStrategyTest::foo:108");
+        assertThat(foo.toString()).isEqualTo("DefaultToStringStrategyTest::foo:107");
     }
 
     private interface FooInterface {

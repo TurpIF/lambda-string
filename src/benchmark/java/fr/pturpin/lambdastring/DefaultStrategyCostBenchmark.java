@@ -1,8 +1,7 @@
 package fr.pturpin.lambdastring;
 
-import com.ea.agentloader.AgentLoader;
 import fr.pturpin.lambdastring.LambdaTestHolder.Lambda;
-import fr.pturpin.lambdastring.agent.LambdaToStringAgent;
+import fr.pturpin.lambdastring.agent.LambdaAgentLoader;
 import fr.pturpin.lambdastring.strategy.DefaultToStringStrategy;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -27,7 +26,7 @@ public class DefaultStrategyCostBenchmark {
     @Setup
     public void setup() {
         if (isInjected) {
-            AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), DefaultToStringStrategy.class.getName());
+            LambdaAgentLoader.loadAgent(DefaultToStringStrategy.class.getName());
         }
     }
 

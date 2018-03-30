@@ -1,9 +1,8 @@
 package fr.pturpin.lambdastring.strategy;
 
-import com.ea.agentloader.AgentLoader;
 import fr.pturpin.lambdastring.LambdaTestHolder;
 import fr.pturpin.lambdastring.LambdaTestHolder.Lambda;
-import fr.pturpin.lambdastring.agent.LambdaToStringAgent;
+import fr.pturpin.lambdastring.agent.LambdaAgentLoader;
 import fr.pturpin.lambdastring.transform.LambdaMetaInfo;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ class LambdaStringTest {
     static void beforeAll() {
         STATIC_LAMBDA_BEFORE_AGENT = () -> {};
         STATIC_METHOD_REF_BEFORE_AGENT = LambdaTestHolder::body;
-        AgentLoader.loadAgentClass(LambdaToStringAgent.class.getName(), TestLambdaToStringStrategy.class.getName());
+        LambdaAgentLoader.loadAgent(TestLambdaToStringStrategy.class.getName());
         STATIC_LAMBDA_AFTER_AGENT = () -> {};
         STATIC_METHOD_REF_AFTER_AGENT = LambdaTestHolder::body;
     }
