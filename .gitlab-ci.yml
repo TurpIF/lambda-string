@@ -5,7 +5,7 @@ stages:
 build:jdk8:
   image: maven:3.5.0-jdk-8
   stage: build
-  script: "mvn package -B -DfinalName=build"
+  script: "mvn package -B"
   artifacts:
     paths:
     - target/*.jar
@@ -33,14 +33,25 @@ package:jdk9:
 test-ibmjava8:
   image: maven:3.5.0-ibmjava-8-alpine
   stage: package
-  script: "mvn verify -B"
+  script: "mvn verify -B -P skip-jar -DskipUTs"
+  dependencies:
+  - build:jdk8
+
+build-benchmark:
+  image: maven:3.5.0-jdk-8
+  stage: build
+  script: "mvn package -B -DfinalName=build"
+  artifacts:
+    paths:
+    - target/*.jar
+    expire_in: 20 minutes
 
 benchmark:
   image: java:latest
   stage: package
   script: /usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar target/build-benchmarks.jar > ./benchmark.log
   dependencies:
-  - build:jdk8
+  - build-benchmark
   artifacts:
     paths:
     - benchmark.log
