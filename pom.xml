@@ -81,6 +81,27 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>jdk9</id>
+            <activation>
+                <jdk>[1.9,</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- JDK9 disallow attaching new agent to the current VM by default: https://bugs.openjdk.java.net/browse/JDK-8180425 -->
+                            <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <build>
         <finalName>${finalName}</finalName>
         <resources>
@@ -138,8 +159,6 @@
                 <configuration>
                     <reuseForks>false</reuseForks>
                     <skipTests>${skipUTs}</skipTests>
-                    <!-- JDK9 disallow attaching new agent to the current VM by default: https://bugs.openjdk.java.net/browse/JDK-8180425 -->
-                    <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
                     <includes>
                         <include>**/*_UT.java</include>
                         <include>**/*_MT.java</include> <!-- MT as Mixed Test: UT and IT-->
