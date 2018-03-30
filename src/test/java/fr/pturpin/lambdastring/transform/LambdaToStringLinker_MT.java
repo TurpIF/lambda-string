@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class LambdaToStringLinkerTest {
+class LambdaToStringLinker_MT {
 
     @BeforeAll
     static void beforeAll() {

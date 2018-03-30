@@ -12,7 +12,7 @@ import java.util.function.Function;
 import static fr.pturpin.lambdastring.LambdaTestHolder.defaultToString;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class LambdaToStringAgentIT {
+class LambdaToStringAgent_MT {
 
     private static final String INJECTED_TO_STRING = "injected";
 

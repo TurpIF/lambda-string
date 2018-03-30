@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-class LineNumberDetectionTest {
+class LineNumberDetection_MT {
 
     @BeforeAll
     static void beforeAll() {

@@ -8,6 +8,10 @@ import fr.pturpin.lambdastring.transform.LambdaMetaInfo;
 import fr.pturpin.lambdastring.transform.LambdaToStringLinker;
 import fr.pturpin.lambdastring.transform.LambdaToStringLinkerException;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
 public final class LambdaAgentLoader {
 
     private static final String LOAD_FOR_IT_PROP = "fr.pturpin.lambdastring.test.agent.loader.for-integration";
@@ -41,36 +45,41 @@ public final class LambdaAgentLoader {
     }
 
     private static void loadAgentForIT(String agentArgs) {
-        LambdaToStringStrategy newDelegate;
+        Supplier<LambdaToStringStrategy> newDelegateFactory;
         if (agentArgs == null || agentArgs.isEmpty()) {
-            newDelegate = new DefaultToStringStrategy();
+            newDelegateFactory = DefaultToStringStrategy::new;
         } else {
-            try {
-                newDelegate = LambdaToStringLinker.createStrategy(agentArgs);
-            } catch (LambdaToStringLinkerException e) {
-                throw new RuntimeException("Could not load agent for IT", e);
-            }
+            newDelegateFactory = () -> {
+                try {
+                    return LambdaToStringLinker.createStrategy(agentArgs);
+                } catch (LambdaToStringLinkerException e) {
+                    throw new RuntimeException("Could not load agent for IT", e);
+                }
+            };
         }
-        DynamicLambdaToStringStrategy.setDelegate(newDelegate);
+        DynamicLambdaToStringStrategy.setDelegate(newDelegateFactory);
     }
 
     private static final class DynamicLambdaToStringStrategy implements LambdaToStringStrategy {
 
-        private static LambdaToStringStrategy delegate = null;
+        private static Supplier<LambdaToStringStrategy> delegateFactory = null;
+        private static Map<Object, LambdaToStringStrategy> delegateByLambda = new HashMap<>();
 
         DynamicLambdaToStringStrategy() {
         }
 
-        static void setDelegate(LambdaToStringStrategy newDelegate) {
-            delegate = newDelegate;
+        static void setDelegate(Supplier<LambdaToStringStrategy> newDelegateFactory) {
+            delegateFactory = newDelegateFactory;
+            delegateByLambda.clear();
         }
 
         @Override
         public String createToString(Object lambda, LambdaMetaInfo metaInfo) throws LambdaToStringException {
-            if (delegate == null) {
+            if (delegateFactory == null) {
                 throw new LambdaToStringException("Delegate strategy is not set");
             }
-            return delegate.createToString(lambda, metaInfo);
+            LambdaToStringStrategy strategy = delegateByLambda.computeIfAbsent(lambda, l -> delegateFactory.get());
+            return strategy.createToString(lambda, metaInfo);
         }
     }
 

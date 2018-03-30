@@ -9,7 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-class InnerClassLambdaMetafactoryTransformerTest {
+class InnerClassLambdaMetafactoryTransformer_UT {
 
     @Test
     void testInnerMetafactoryTransformation() throws Exception {

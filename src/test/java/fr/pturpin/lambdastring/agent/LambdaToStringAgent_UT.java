@@ -11,7 +11,7 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.util.jar.JarFile;
 
-class LambdaToStringAgentTest {
+class LambdaToStringAgent_UT {
 
     @Test
     void agentShouldThrowIfItsInvalid() throws Exception {

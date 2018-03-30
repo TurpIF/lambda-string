@@ -140,6 +140,10 @@
                     <skipTests>${skipUTs}</skipTests>
                     <!-- JDK9 disallow attaching new agent to the current VM by default: https://bugs.openjdk.java.net/browse/JDK-8180425 -->
                     <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
+                    <includes>
+                        <include>**/*_UT.java</include>
+                        <include>**/*_MT.java</include> <!-- MT as Mixed Test: UT and IT-->
+                    </includes>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -161,8 +165,14 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.19.1</version>
                 <configuration>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
                     <skipTests>${skipTests}</skipTests>
                     <skipITs>${skipITs}</skipITs>
+                    <includes>
+                        <include>**/*_IT.java</include>
+                        <include>**/*_MT.java</include> <!-- MT as Mixed Test: UT and IT-->
+                    </includes>
                 </configuration>
                 <executions>
                     <execution>

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class DefaultToStringStrategyTest {
+class DefaultToStringStrategy_MT {
 
     @BeforeAll
     static void beforeAll() {
@@ -92,8 +92,8 @@ class DefaultToStringStrategyTest {
 
     @Test
     void testMethodRefWithArgument() throws Exception {
-        FooInterface foo = DefaultToStringStrategyTest::foo;
-        assertThat(foo.toString()).isEqualTo("DefaultToStringStrategyTest::foo:107");
+        FooInterface foo = DefaultToStringStrategy_MT::foo;
+        assertThat(foo.toString()).isEqualTo("DefaultToStringStrategy_MT::foo:107");
     }
 
     private interface FooInterface {
