@@ -24,7 +24,7 @@ wget -O /tmp/lambdaString-0.1.jar "https://gitlab.com/TurpIF/lambda-to-string/-/
 cd /your/project
 java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -javaagent:/tmp/lambdaString-0.1.jar my.dummy.Main
 
-# Attach a debugger client with JDB or your prefered IDE
+# Attach a debugger client with JDB or your preferred IDE
 ```
 
 
@@ -35,7 +35,7 @@ To activate the LS agent using IntelliJ, please use the following:
 ![Intellij hint](https://gitlab.com/TurpIF/lambda-to-string/raw/master/doc/intellij-usage.png)
 
 
-To activate the LS agent with custom toString stratagy, please use the following:
+To activate the LS agent with custom toString strategy, please use the following:
 - Download the [lambdaString-0.1.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8)
 - Add `-javaagent:/path/to/lambdaString-0.1.jar=my.custom.ToStringStrategy` in your java options
 
@@ -44,7 +44,7 @@ To activate the LS agent with custom toString stratagy, please use the following
 
 This question is legitimate because a lambda should be restrained in a small scope.
 So, reading code using lambda should be simple and direct.
-Althought, projects may grow quickly as their technical debt.
+Although, projects may grow quickly as their technical debt.
 This agent may help you in that case : when you lose the control of your lambda, and you can't tell which one is it.
 
 ```java
