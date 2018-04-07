@@ -20,17 +20,14 @@ package:jdk8:
       - target/*.jar
 
 # Use the slim package because the normal one is unable to fetch plugins: https://github.com/carlossg/docker-maven/issues/50
-build:jdk9:
-  image: maven:3.5.0-jdk-9-slim
-  stage: build
-  script: "mvn package -B"
-
-package:jdk9:
+test-jre9:
   image: maven:3.5.0-jdk-9-slim
   stage: package
-  script: "mvn verify -B"
+  script: "mvn verify -B -P skip-jar -DskipUTs"
+  dependencies:
+  - build:jdk8
 
-test-ibmjava8:
+test-jre8-ibm:
   image: maven:3.5.0-ibmjava-8-alpine
   stage: package
   script: "mvn verify -B -P skip-jar -DskipUTs"
@@ -55,3 +52,6 @@ benchmark:
   artifacts:
     paths:
     - benchmark.log
+  only:
+  - master
+  - tags
