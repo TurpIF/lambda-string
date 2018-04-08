@@ -2,10 +2,17 @@ stages:
   - build
   - package
 
+variables:
+  # Activate remote debug server during integration test on specified port
+  # DEBUG: <port>
+
+  MAVEN_DYN_CLI_OPTS: '--batch-mode $([ -n "$DEBUG" ] && echo "-Dit.debug.remote=$DEBUG")'
+  MAVEN_CLI_OPTS: 'echo "$MAVEN_DYN_CLI_OPTS"'
+
 build:jdk8:
   image: maven:3.5.0-jdk-8
   stage: build
-  script: "mvn package -B"
+  script: "mvn package `eval $MAVEN_CLI_OPTS`"
   artifacts:
     paths:
     - target/*.jar
@@ -14,7 +21,7 @@ build:jdk8:
 package:jdk8:
   image: maven:3.5.0-jdk-8
   stage: package
-  script: "mvn verify -B"
+  script: "mvn verify `eval $MAVEN_CLI_OPTS`"
   artifacts:
     paths:
       - target/*.jar
@@ -23,21 +30,21 @@ package:jdk8:
 test-jre9:
   image: maven:3.5.0-jdk-9-slim
   stage: package
-  script: "mvn verify -B -P skip-jar -DskipUTs"
+  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs"
   dependencies:
   - build:jdk8
 
 test-jre8-ibm:
   image: maven:3.5.0-ibmjava-8-alpine
   stage: package
-  script: "mvn verify -B -P skip-jar -DskipUTs"
+  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs"
   dependencies:
   - build:jdk8
 
 build-benchmark:
   image: maven:3.5.0-jdk-8
   stage: build
-  script: "mvn package -B -DfinalName=build"
+  script: "mvn package `eval $MAVEN_CLI_OPTS` -DfinalName=build"
   artifacts:
     paths:
     - target/*.jar

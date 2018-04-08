@@ -14,9 +14,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <skipTests>false</skipTests>
         <skipITs>${skipTests}</skipITs>
         <skipUTs>${skipTests}</skipUTs>
+        <it.argLine/>
+        <it.debug.remote/>
+
         <finalName>${project.artifactId}-${project.version}</finalName>
         <asm.version>6.0</asm.version>
         <jmh.version>1.20</jmh.version>
@@ -137,6 +141,18 @@
                 </plugins>
             </build>
         </profile>
+
+        <profile>
+            <id>remote-debug</id>
+            <activation>
+                <property>
+                    <name>it.debug.remote</name>
+                </property>
+            </activation>
+            <properties>
+                <it.argLine>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=${it.debug.remote}</it.argLine>
+            </properties>
+        </profile>
     </profiles>
 
     <build>
@@ -238,6 +254,7 @@
                         </goals>
                         <configuration>
                             <argLine>
+                                ${it.argLine}
                                 -javaagent:${project.build.directory}/${project.build.finalName}.${project.packaging}=fr.pturpin.lambdastring.agent.LambdaAgentLoader$DynamicLambdaToStringStrategy -Dfr.pturpin.lambdastring.test.agent.loader.for-integration=true
                             </argLine>
                         </configuration>
