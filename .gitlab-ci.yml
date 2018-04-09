@@ -40,14 +40,14 @@ package:jdk8:
 test-jre9:
   image: maven:3.5.0-jdk-9-slim
   stage: package
-  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs"
+  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs -Dmaven.javadoc.skip=true"
   dependencies:
   - build:jdk8
 
 test-jre8-ibm:
   image: maven:3.5.0-ibmjava-8-alpine
   stage: package
-  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs"
+  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs -Dmaven.javadoc.skip=true"
   dependencies:
   - build:jdk8
 
