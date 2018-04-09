@@ -51,7 +51,7 @@ package:jdk8:
 
 .test: &test
   stage: test
-  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs -Dmaven.javadoc.skip=true"
+  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dmaven.javadoc.skip=true -Dassembly.skipAssembly=true"
   dependencies:
     - build:jdk8
 
