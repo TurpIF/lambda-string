@@ -1,5 +1,6 @@
 stages:
   - build
+  - test
   - package
 
 variables:
@@ -46,12 +47,15 @@ package:jdk8:
       - target/*.jar
 
 .test: &test
-  stage: package
+  stage: test
   script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs -Dmaven.javadoc.skip=true"
   dependencies:
     - build:jdk8
 
-# Use the slim package because the normal one is unable to fetch plugins: https://github.com/carlossg/docker-maven/issues/50
+test-jre8:
+  <<: *test
+  image: maven:3.5.0-jdk-8-slim
+
 test-jre9:
   <<: *test
   image: maven:3.5.0-jdk-9-slim
