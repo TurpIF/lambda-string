@@ -14,9 +14,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <skipTests>false</skipTests>
         <skipITs>${skipTests}</skipITs>
         <skipUTs>${skipTests}</skipUTs>
+        <it.argLine/>
+        <it.debug.remote/>
+
         <finalName>${project.artifactId}-${project.version}</finalName>
         <asm.version>6.0</asm.version>
         <jmh.version>1.20</jmh.version>
@@ -90,25 +94,6 @@
 
     <profiles>
         <profile>
-            <id>jdk9</id>
-            <activation>
-                <jdk>[1.9,</jdk>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <!-- JDK9 disallow attaching new agent to the current VM by default: https://bugs.openjdk.java.net/browse/JDK-8180425 -->
-                            <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
             <id>skip-jar</id>
             <build>
                 <plugins>
@@ -136,6 +121,18 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+
+        <profile>
+            <id>remote-debug</id>
+            <activation>
+                <property>
+                    <name>it.debug.remote</name>
+                </property>
+            </activation>
+            <properties>
+                <it.argLine>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=${it.debug.remote}</it.argLine>
+            </properties>
         </profile>
     </profiles>
 
@@ -238,6 +235,7 @@
                         </goals>
                         <configuration>
                             <argLine>
+                                ${it.argLine}
                                 -javaagent:${project.build.directory}/${project.build.finalName}.${project.packaging}=fr.pturpin.lambdastring.agent.LambdaAgentLoader$DynamicLambdaToStringStrategy -Dfr.pturpin.lambdastring.test.agent.loader.for-integration=true
                             </argLine>
                         </configuration>
