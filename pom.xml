@@ -22,7 +22,7 @@
         <it.debug.remote/>
 
         <finalName>${project.artifactId}-${project.version}</finalName>
-        <asm.version>6.0</asm.version>
+        <asm.version>6.1</asm.version>
         <jmh.version>1.20</jmh.version>
     </properties>
 
