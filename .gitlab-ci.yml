@@ -42,6 +42,9 @@ build-benchmark:
     paths:
     - target/*.jar
     expire_in: 20 minutes
+  only:
+    - master
+    - tags
 
 benchmark:
   image: java:latest
