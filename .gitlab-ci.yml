@@ -37,6 +37,9 @@ build:jdk8:
 build-benchmark:
   <<: *build
   script: "mvn package `eval $MAVEN_CLI_OPTS` -DfinalName=build"
+  only:
+    - master
+    - tags
 
 package:jdk8:
   image: $JDK_AGENT_VERSION
