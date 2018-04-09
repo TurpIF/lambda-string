@@ -19,14 +19,14 @@ variables:
 # To keep cache across branches add 'key: "$CI_JOB_REF_NAME"'
 cache:
   paths:
-  - .m2/repository
+    - .m2/repository
 
 .build: &build
   image: $JDK_AGENT_VERSION
   stage: build
   artifacts:
     paths:
-    - target/*.jar
+      - target/*.jar
     expire_in: 20 minutes
 
 build:jdk8:
@@ -49,7 +49,7 @@ package:jdk8:
   stage: package
   script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs -Dmaven.javadoc.skip=true"
   dependencies:
-  - build:jdk8
+    - build:jdk8
 
 # Use the slim package because the normal one is unable to fetch plugins: https://github.com/carlossg/docker-maven/issues/50
 test-jre9:
@@ -65,10 +65,10 @@ benchmark:
   stage: package
   script: /usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar target/build-benchmarks.jar > ./benchmark.log
   dependencies:
-  - build-benchmark
+    - build-benchmark
   artifacts:
     paths:
     - benchmark.log
   only:
-  - master
-  - tags
+    - master
+    - tags
