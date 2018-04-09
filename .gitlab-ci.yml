@@ -1,57 +1,78 @@
 stages:
   - build
+  - test
   - package
 
-build:jdk8:
-  image: maven:3.5.0-jdk-8
+variables:
+  # Activate remote debug server during integration test on specified port
+  # DEBUG: <port>
+
+  # This will suppress any download for dependencies and plugins or upload messages which would clutter the console log.
+  # `showDateTime` will show the passed time in milliseconds. You need to specify `--batch-mode` to make this work.
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+
+  MAVEN_DYN_CLI_OPTS: '--batch-mode --errors --fail-at-end --show-version $([ -n "$DEBUG" ] && echo "-Dit.debug.remote=$DEBUG")'
+  MAVEN_CLI_OPTS: 'echo "$MAVEN_DYN_CLI_OPTS"'
+
+  JDK_AGENT_VERSION: "maven:3.5.0-jdk-8"
+
+# Cache downloaded dependencies and plugins between builds.
+# To keep cache across branches add 'key: "$CI_JOB_REF_NAME"'
+cache:
+  paths:
+    - .m2/repository
+
+.build: &build
+  image: $JDK_AGENT_VERSION
   stage: build
-  script: "mvn package -B"
   artifacts:
     paths:
-    - target/*.jar
+      - target/*.jar
     expire_in: 20 minutes
 
+build:jdk8:
+  <<: *build
+  script: "mvn package `eval $MAVEN_CLI_OPTS`"
+
+build-benchmark:
+  <<: *build
+  script: "mvn package `eval $MAVEN_CLI_OPTS` -DfinalName=build"
+
 package:jdk8:
-  image: maven:3.5.0-jdk-8
+  image: $JDK_AGENT_VERSION
   stage: package
-  script: "mvn verify -B"
+  script: "mvn verify `eval $MAVEN_CLI_OPTS`"
   artifacts:
     paths:
       - target/*.jar
 
-# Use the slim package because the normal one is unable to fetch plugins: https://github.com/carlossg/docker-maven/issues/50
-test-jre9:
-  image: maven:3.5.0-jdk-9-slim
-  stage: package
-  script: "mvn verify -B -P skip-jar -DskipUTs"
+.test: &test
+  stage: test
+  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs -Dmaven.javadoc.skip=true"
   dependencies:
-  - build:jdk8
+    - build:jdk8
+
+test-jre8:
+  <<: *test
+  image: maven:3.5.0-jdk-8-slim
+
+test-jre9:
+  <<: *test
+  image: maven:3.5.0-jdk-9-slim
 
 test-jre8-ibm:
+  <<: *test
   image: maven:3.5.0-ibmjava-8-alpine
-  stage: package
-  script: "mvn verify -B -P skip-jar -DskipUTs"
-  dependencies:
-  - build:jdk8
-
-build-benchmark:
-  image: maven:3.5.0-jdk-8
-  stage: build
-  script: "mvn package -B -DfinalName=build"
-  artifacts:
-    paths:
-    - target/*.jar
-    expire_in: 20 minutes
 
 benchmark:
   image: java:latest
   stage: package
   script: /usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar target/build-benchmarks.jar > ./benchmark.log
   dependencies:
-  - build-benchmark
+    - build-benchmark
   artifacts:
     paths:
     - benchmark.log
   only:
-  - master
-  - tags
+    - master
+    - tags
