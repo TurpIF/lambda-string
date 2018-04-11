@@ -2,6 +2,7 @@ stages:
   - build
   - test
   - package
+  - deploy
 
 variables:
   # Activate remote debug server during integration test on specified port
@@ -48,10 +49,17 @@ package:jdk8:
   artifacts:
     paths:
       - target/*.jar
+      - target/site/jacoco
 
 .test: &test
   stage: test
-  script: "mvn verify `eval $MAVEN_CLI_OPTS` -P skip-jar -DskipUTs -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -Dmaven.javadoc.skip=true -Dassembly.skipAssembly=true"
+  script: "mvn verify `eval $MAVEN_CLI_OPTS` \
+    -P skip-jar -DskipUTs \
+    -Dmaven.javadoc.skip=true \
+    -Dmaven.source.skip=true \
+    -Dmaven.javadoc.skip=true \
+    -Dassembly.skipAssembly=true \
+    -Djacoco.skip=true"
   dependencies:
     - build:jdk8
 
@@ -80,6 +88,32 @@ benchmark:
   artifacts:
     paths:
     - benchmark.log
+  only:
+    - master
+    - tags
+
+pages:
+  image: alpine:3.7
+  stage: deploy
+  dependencies:
+    - package:jdk8
+  script:
+    - mkdir -p public/coverage
+    - cp -rf target/site/jacoco/* public/coverage
+    - awk -F"," '
+      {
+        instructions += $4 + $5;
+        covered += $5
+      }
+      END
+      {
+        print covered, "/", instructions, "instructions covered";
+        print 100*covered/instructions, "% covered"
+      }
+      ' target/site/jacoco/jacoco.csv
+  artifacts:
+    paths:
+      - public
   only:
     - master
     - tags
