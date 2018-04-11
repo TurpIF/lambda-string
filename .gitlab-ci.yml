@@ -82,12 +82,16 @@ test-jre8-ibm:
 benchmark:
   image: java:latest
   stage: package
-  script: /usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar target/build-benchmarks.jar > ./benchmark.log
+  script: "/usr/lib/jvm/java-8-openjdk-amd64/bin/java \
+    -jar target/build-benchmarks.jar \
+    -rf json -rff target/benchmark.json \
+    | tee target/benchmark.log"
   dependencies:
     - build-benchmark
   artifacts:
     paths:
-    - benchmark.log
+    - target/benchmark.json
+    - target/benchmark.log
   only:
     - master
     - tags
