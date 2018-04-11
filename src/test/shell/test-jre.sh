@@ -17,6 +17,6 @@ debug_opts=$([ -n "$debug_port" ] && echo "--docker-network-mode host --env DEBU
 
 gitlab-runner exec docker \
     ${debug_opts} \
-    --pre-build-script "cp -r /cache/ ./target/" \
+    --pre-build-script "ln -s /cache/ ./target" \
     --docker-volumes /tmp/output:/cache \
     ${job_id}
