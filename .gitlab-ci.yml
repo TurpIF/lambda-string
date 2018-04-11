@@ -98,8 +98,8 @@ pages:
   dependencies:
     - package:jdk8
   script:
-    - mkdir public
-    - cp -rf target/site/jacoco/* public
+    - mkdir -p public/coverage
+    - cp -rf target/site/jacoco/* public/coverage
     - awk -F"," '
       {
         instructions += $4 + $5;
