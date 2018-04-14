@@ -133,14 +133,38 @@ coverage-rate:
         print 100*covered/instructions, "% covered"
       }' target/site/jacoco/jacoco.csv
 
+benchmark-report:
+  image: gradle:alpine
+  stage: package
+  dependencies:
+    - benchmark-jre8
+    - benchmark-jre9
+    - benchmark-jre10
+    - benchmark-jre8-ibm
+  script:
+    # Use benchmark-reports as output directory because the target directory is RO under this gradle docker image
+    - for json in $(ls target/benchmark | grep ".json"); do
+        name=$(echo $json | head -c -6);
+        mkdir -p "benchmark-reports/$name";
+        gradle jmhReport
+          -PreportInput="target/benchmark/$json"
+          -PreportOutput="benchmark-reports/$name/";
+      done
+  artifacts:
+    paths:
+      - benchmark-reports
+
 pages:
   image: alpine:3.7
   stage: deploy
   dependencies:
     - package:jdk8
+    - benchmark-report
   script:
     - mkdir -p public/coverage
+    - mkdir -p public/benchmark
     - cp -rf target/site/jacoco/* public/coverage
+    - cp -rf benchmark/* public/benchmark
   artifacts:
     paths:
       - public
