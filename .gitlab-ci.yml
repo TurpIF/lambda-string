@@ -116,6 +116,23 @@ benchmark-jre8-ibm:
     JAVA_ARGS: "-Dcom.ibm.tools.attach.directory=/tmp -Djava.io.tmpdir=/tmp"
   image: maven:3.5-ibmjava-8-alpine
 
+coverage-rate:
+  image: alpine:3.7
+  stage: package
+  dependencies:
+    - package:jdk8
+  script:
+    - awk -F"," \
+      '{
+        instructions += $4 + $5;
+        covered += $5
+      }
+      END
+      {
+        print covered, "/", instructions, "instructions covered";
+        print 100*covered/instructions, "% covered"
+      }' target/site/jacoco/jacoco.csv
+
 pages:
   image: alpine:3.7
   stage: deploy
@@ -124,17 +141,6 @@ pages:
   script:
     - mkdir -p public/coverage
     - cp -rf target/site/jacoco/* public/coverage
-    - awk -F"," '
-      {
-        instructions += $4 + $5;
-        covered += $5
-      }
-      END
-      {
-        print covered, "/", instructions, "instructions covered";
-        print 100*covered/instructions, "% covered"
-      }
-      ' target/site/jacoco/jacoco.csv
   artifacts:
     paths:
       - public
