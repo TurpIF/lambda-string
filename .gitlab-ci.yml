@@ -26,22 +26,17 @@ cache:
 .build: &build
   image: $JDK_AGENT_VERSION
   stage: build
+
+build-benchmark:
+  <<: *build
+  script: "mvn package `eval $MAVEN_CLI_OPTS` -DfinalName=build"
   artifacts:
     paths:
       - target/*.jar
     expire_in: 20 minutes
 
-build:jdk8:
-  <<: *build
-  script: "mvn package `eval $MAVEN_CLI_OPTS`"
-
-build-benchmark:
-  <<: *build
-  script: "mvn package `eval $MAVEN_CLI_OPTS` -DfinalName=build"
-
 package:jdk8:
-  image: $JDK_AGENT_VERSION
-  stage: package
+  <<: *build
   script: "mvn verify `eval $MAVEN_CLI_OPTS`"
   artifacts:
     paths:
@@ -58,7 +53,7 @@ package:jdk8:
     -Dassembly.skipAssembly=true \
     -Djacoco.skip=true"
   dependencies:
-    - build:jdk8
+    - package:jdk8
 
 test-jre8:
   <<: *test
@@ -77,7 +72,7 @@ test-jre8-ibm:
   image: maven:3.5-ibmjava-8-alpine
 
 .benchmark: &benchmark
-  stage: package
+  stage: test
   variables:
     JAVA_ARGS: ""
     JMH_MAIN_ARGS: ""
