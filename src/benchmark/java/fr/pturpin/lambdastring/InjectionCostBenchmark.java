@@ -34,8 +34,8 @@ public class InjectionCostBenchmark {
     @State(Scope.Benchmark)
     public static class Data {
 
-        Lambda lambda;
-        Lambda methodRef;
+        final Lambda lambda;
+        final Lambda methodRef;
 
         public Data() {
             this.lambda = () -> {};
@@ -64,6 +64,7 @@ public class InjectionCostBenchmark {
         Lambda lambda = LambdaTestHolder::body;
         bh.consume(lambda.toString());
     }
+
 
     @SuppressWarnings("unused")
     private static final class OriginalToStringStrategy implements LambdaToStringStrategy {
