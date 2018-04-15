@@ -9,8 +9,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Measure the time difference between getting the {@link Object#toString()} without any injection or injecting the
- * {@link DefaultToStringStrategy}.
+ * Measure the time injecting the {@link Object#toString()} with the {@link DefaultToStringStrategy} set up.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -18,16 +17,11 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @Fork(1)
-public class DefaultStrategyCostBenchmark {
-
-    @Param({ "true", "false" })
-    public boolean isInjected;
+public class DefaultToStringStrategyBenchmark {
 
     @Setup
     public void setup() {
-        if (isInjected) {
-            LambdaAgentLoader.loadAgent(DefaultToStringStrategy.class.getName());
-        }
+        LambdaAgentLoader.loadAgent(DefaultToStringStrategy.class.getName());
     }
 
     @State(Scope.Benchmark)

@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @Fork(1)
-public class LambdaGenerationCostBenchmark {
+public class LambdaCallSiteGenerationComparisonBenchmark {
 
     @Param({ "true", "false" })
     public boolean isInjected;
@@ -53,7 +53,7 @@ public class LambdaGenerationCostBenchmark {
             MethodType invokedType = MethodType.methodType(lambdaMethod.getDeclaringClass());
             MethodType methodType = MethodType.fromMethodDescriptorString(
                     Type.getMethodDescriptor(lambdaMethod),
-                    InjectionCostBenchmark.class.getClassLoader());
+                    OriginalToStringInjectionComparisonBenchmark.class.getClassLoader());
             MethodHandle methodHandle = caller.unreflect(LambdaTestHolder.class.getDeclaredMethod("body"));
             return new LambdaGeneration(
                     caller,

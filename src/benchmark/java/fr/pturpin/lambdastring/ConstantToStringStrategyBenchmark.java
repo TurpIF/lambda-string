@@ -10,8 +10,8 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Compare the duration of an injection of a complex string corresponding to the original {@link Object#toString()}
- * implementation.
+ * Compare the duration of an injection of a constant string. It is expected that it's near a no-op duration,
+ * so a no-op measure is included.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -19,11 +19,13 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @Fork(1)
-public class ComplexInjectionBenchmark {
+public class ConstantToStringStrategyBenchmark {
+
+    private static final String INJECTED = "injected";
 
     @Setup
     public static void setup() {
-        LambdaAgentLoader.loadAgent(ComplexInjectionStrategy.class.getName());
+        LambdaAgentLoader.loadAgent(ConstantInjectionStrategy.class.getName());
     }
 
     @State(Scope.Benchmark)
@@ -40,6 +42,11 @@ public class ComplexInjectionBenchmark {
             this.anonymousClass = newAnonymousLambda();
             this.staticClass = new StaticLambda();
         }
+    }
+
+    @Benchmark
+    public void noop(Blackhole bh) {
+        bh.consume(INJECTED);
     }
 
     @Benchmark
@@ -93,7 +100,7 @@ public class ComplexInjectionBenchmark {
             }
             @Override
             public String toString() {
-                return LambdaTestHolder.defaultToString(this);
+                return INJECTED;
             }
         };
     }
@@ -105,15 +112,15 @@ public class ComplexInjectionBenchmark {
 
         @Override
         public String toString() {
-            return LambdaTestHolder.defaultToString(this);
+            return INJECTED;
         }
     }
 
     @SuppressWarnings("unused")
-    private static final class ComplexInjectionStrategy implements LambdaToStringStrategy {
+    private static final class ConstantInjectionStrategy implements LambdaToStringStrategy {
         @Override
         public String createToString(Object lambda, LambdaMetaInfo metaInfo) {
-            return LambdaTestHolder.defaultToString(lambda);
+            return INJECTED;
         }
     }
 

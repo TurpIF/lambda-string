@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @Fork(1)
-public class InjectionCostBenchmark {
+public class OriginalToStringInjectionComparisonBenchmark {
 
     @Param({ "true", "false" })
     public boolean isInjected;
