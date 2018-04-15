@@ -38,9 +38,6 @@ build:jdk8:
 build-benchmark:
   <<: *build
   script: "mvn package `eval $MAVEN_CLI_OPTS` -DfinalName=build"
-  only:
-    - master
-    - tags
 
 package:jdk8:
   image: $JDK_AGENT_VERSION
@@ -82,22 +79,25 @@ test-jre8-ibm:
 .benchmark: &benchmark
   stage: package
   variables:
-      JAVA_ARGS: ""
+    JAVA_ARGS: ""
+    JMH_MAIN_ARGS: ""
+    # We don't care about the precision of the benchmark. We just want to get it run to test the benchmark pipeline
+    JMH_TEST_ARGS: "-wi 1 -i 1"
   script:
     - mkdir -p target/benchmark
-    - "java ${JAVA_ARGS} \
-      -jar target/build-benchmarks.jar \
-      -foe true \
-      -rf json -rff target/benchmark/${CI_JOB_NAME}.json \
-      | tee target/benchmark/${CI_JOB_NAME}.log"
+    - name=$(echo "${CI_JOB_NAME}" | tail -c +11)
+    - '[ "$CI_COMMIT_REF_NAME" = "master" -o -n "$CI_COMMIT_TAG" ] && jmhArgs="$JMH_MAIN_ARGS" || jmhArgs="$JMH_TEST_ARGS"'
+    - java ${JAVA_ARGS}
+      -jar target/build-benchmarks.jar
+      ${jmhArgs}
+      -foe true
+      -rf json -rff target/benchmark/${name}.json
+      | tee target/benchmark/${name}.log
   dependencies:
     - build-benchmark
   artifacts:
     paths:
     - target/benchmark
-  only:
-    - master
-    - tags
 
 benchmark-jre8:
   <<: *benchmark
