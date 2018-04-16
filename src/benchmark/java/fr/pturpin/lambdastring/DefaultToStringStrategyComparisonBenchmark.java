@@ -17,11 +17,16 @@ import java.util.concurrent.TimeUnit;
 @Warmup(iterations = 5)
 @Measurement(iterations = 10)
 @Fork(1)
-public class DefaultToStringStrategyBenchmark {
+public class DefaultToStringStrategyComparisonBenchmark {
+
+    @Param({ "true", "false" })
+    public boolean isInjected;
 
     @Setup
     public void setup() {
-        LambdaAgentLoader.loadAgent(DefaultToStringStrategy.class.getName());
+        if (isInjected) {
+            LambdaAgentLoader.loadAgent(DefaultToStringStrategy.class.getName());
+        }
     }
 
     @State(Scope.Benchmark)
