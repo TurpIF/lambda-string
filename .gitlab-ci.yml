@@ -164,7 +164,7 @@ pages:
     - mkdir -p public/coverage
     - mkdir -p public/benchmark
     - cp -rf target/site/jacoco/* public/coverage
-    - cp -rf benchmark/* public/benchmark
+    - cp -rf benchmark-reports/* public/benchmark
   artifacts:
     paths:
       - public
