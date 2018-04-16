@@ -6,6 +6,6 @@
 
 rm -rf /tmp/output/*
 gitlab-runner exec docker \
-    --post-build-script "cp -r target/* /cache/" \
+    --pre-build-script "ln -s /cache/ ./target" \
     --docker-volumes /tmp/output:/cache \
-    build:jdk8
+    package:jdk8

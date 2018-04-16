@@ -1,0 +1,11 @@
+// Gradle build file used only to generate report from JMH output
+
+plugins {
+    // https://github.com/jzillmann/gradle-jmh-report
+    id "io.morethan.jmhreport" version "0.7.0"
+}
+
+jmhReport {
+    jmhResultPath = project.file(project.property('reportInput'))
+    jmhReportOutput = project.file(project.property('reportOutput'))
+}

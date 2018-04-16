@@ -26,25 +26,17 @@ cache:
 .build: &build
   image: $JDK_AGENT_VERSION
   stage: build
+
+build-benchmark:
+  <<: *build
+  script: "mvn package `eval $MAVEN_CLI_OPTS` -DfinalName=build"
   artifacts:
     paths:
       - target/*.jar
     expire_in: 20 minutes
 
-build:jdk8:
-  <<: *build
-  script: "mvn package `eval $MAVEN_CLI_OPTS`"
-
-build-benchmark:
-  <<: *build
-  script: "mvn package `eval $MAVEN_CLI_OPTS` -DfinalName=build"
-  only:
-    - master
-    - tags
-
 package:jdk8:
-  image: $JDK_AGENT_VERSION
-  stage: package
+  <<: *build
   script: "mvn verify `eval $MAVEN_CLI_OPTS`"
   artifacts:
     paths:
@@ -61,7 +53,7 @@ package:jdk8:
     -Dassembly.skipAssembly=true \
     -Djacoco.skip=true"
   dependencies:
-    - build:jdk8
+    - package:jdk8
 
 test-jre8:
   <<: *test
@@ -79,29 +71,59 @@ test-jre8-ibm:
   <<: *test
   image: maven:3.5-ibmjava-8-alpine
 
-benchmark:
-  image: java:latest
-  stage: package
-  script: /usr/lib/jvm/java-8-openjdk-amd64/bin/java -jar target/build-benchmarks.jar > ./benchmark.log
+.benchmark: &benchmark
+  stage: test
+  variables:
+    JAVA_ARGS: ""
+    JMH_MAIN_ARGS: ""
+    # We don't care about the precision of the benchmark. We just want to get it run to test the benchmark pipeline
+    JMH_TEST_ARGS: "-wi 1 -i 1"
+  script:
+    - mkdir -p target/benchmark
+    - name=$(echo "${CI_JOB_NAME}" | tail -c +11)
+    - '[ "$CI_COMMIT_REF_NAME" = "master" -o -n "$CI_COMMIT_TAG" ] && jmhArgs="$JMH_MAIN_ARGS" || jmhArgs="$JMH_TEST_ARGS"'
+    - java ${JAVA_ARGS}
+      -jar target/build-benchmarks.jar
+      ${jmhArgs}
+      -foe true
+      -rf json -rff target/benchmark/${name}.json
+      | tee target/benchmark/${name}.log
   dependencies:
     - build-benchmark
   artifacts:
     paths:
-    - benchmark.log
-  only:
-    - master
-    - tags
+    - target/benchmark
 
-pages:
+benchmark-jre8:
+  <<: *benchmark
+  image: maven:3.5-jdk-8-slim
+
+benchmark-jre9:
+  <<: *benchmark
+  variables:
+    JAVA_ARGS: "-Djdk.attach.allowAttachSelf=true --illegal-access=warn"
+  image: maven:3.5-jdk-9-slim
+
+benchmark-jre10:
+  <<: *benchmark
+  variables:
+    JAVA_ARGS: "-Djdk.attach.allowAttachSelf=true --illegal-access=warn"
+  image: maven:3.5-jdk-10-slim
+
+benchmark-jre8-ibm:
+  <<: *benchmark
+  variables:
+    JAVA_ARGS: "-Dcom.ibm.tools.attach.directory=/tmp -Djava.io.tmpdir=/tmp"
+  image: maven:3.5-ibmjava-8-alpine
+
+coverage-rate:
   image: alpine:3.7
-  stage: deploy
+  stage: package
   dependencies:
     - package:jdk8
   script:
-    - mkdir -p public/coverage
-    - cp -rf target/site/jacoco/* public/coverage
-    - awk -F"," '
-      {
+    - awk -F"," \
+      '{
         instructions += $4 + $5;
         covered += $5
       }
@@ -109,8 +131,40 @@ pages:
       {
         print covered, "/", instructions, "instructions covered";
         print 100*covered/instructions, "% covered"
-      }
-      ' target/site/jacoco/jacoco.csv
+      }' target/site/jacoco/jacoco.csv
+
+benchmark-report:
+  image: gradle:alpine
+  stage: package
+  dependencies:
+    - benchmark-jre8
+    - benchmark-jre9
+    - benchmark-jre10
+    - benchmark-jre8-ibm
+  script:
+    # Use benchmark-reports as output directory because the target directory is RO under this gradle docker image
+    - for json in $(ls target/benchmark | grep ".json"); do
+        name=$(echo $json | head -c -6);
+        mkdir -p "benchmark-reports/$name";
+        gradle jmhReport
+          -PreportInput="target/benchmark/$json"
+          -PreportOutput="benchmark-reports/$name/";
+      done
+  artifacts:
+    paths:
+      - benchmark-reports
+
+pages:
+  image: alpine:3.7
+  stage: deploy
+  dependencies:
+    - package:jdk8
+    - benchmark-report
+  script:
+    - mkdir -p public/coverage
+    - mkdir -p public/benchmark
+    - cp -rf target/site/jacoco/* public/coverage
+    - cp -rf benchmark/* public/benchmark
   artifacts:
     paths:
       - public

@@ -94,6 +94,46 @@ The strategy class should extends the `LambdaToStringStrategy` interface.
 
 TODO Add sample strategy
 
+## Benchmark
+
+This agent should be used during a debugging session with human interaction,
+so a little performance overhead is still acceptable as long as it is not perceptible by a human.
+Although, here is some benchmarks to give you some ideas of the potential impacts :
+
+- [HotSpot JVM 8](https://turpif.gitlab.io/lambda-to-string/benchmark/jre8/)
+- [HotSpot JVM 9](https://turpif.gitlab.io/lambda-to-string/benchmark/jre9/)
+- [HotSpot JVM 10](https://turpif.gitlab.io/lambda-to-string/benchmark/jre10/)
+- [IBM J9 VM (JRE 8)](https://turpif.gitlab.io/lambda-to-string/benchmark/jre8-ibm/)
+
+To reduce the impacts, a particular attention is done when transforming the lambda runtime representations.
+Also, the majority of the computation is done when `toString` is effectively called.
+This avoids performance cost until a true human interaction.
+
+The benchmarks are done with JMH on a Gitlab shared agent. So the absolute metrics may be wrong,
+but the important part is the relative comparison with and without the agent.
+
+### Creation of lambdas
+
+The `LambdaCallSiteGenerationComparisonBenchmark` benchmark compares the time
+the JRE spend generating a class instance (and its constant call site) from a lambda. This is done only once per lambda.
+Currently, on the HostSpot JVM 8, the JRE takes roughly **50ns** to generate a lambda call site without the agent
+and **100ns** with. So yes, there is an overhead, but your JRE can still generate **10 000 000** lambdas per seconds
+(and if you have so many lambdas in your code base, I guess that one seconds is not that much compared to the others
+kinds of issues you may have).
+
+### Cost of strategy call
+
+The `OriginalToStringInjectionComparisonBenchmark` benchmark compares the time the JRE spend returning the
+`Object#toString()` of a lambda. Without agent, the original `toString` is simply called.
+With the agent, a `LambdaToStringStrategy` is setup to return the same. Roughly, both versions take the same time.
+So, there isn't any impact when injecting a strategy that reproduces the same output than a real `toString`.
+
+### Cost of the debugging strategy
+
+The `DefaultToStringStrategyComparisonBenchmark` benchmark compares the time spent by the JRE to
+return the original `toString` compared to returning a useful debugging `toString` as shown above.
+The debugging strategy exceed few milliseconds. Although, this stays imperceptible for a human
+
 ## Known issues
 
 #### Lambdas loaded during bootstrap are not supported (as `Function.identity()`):
