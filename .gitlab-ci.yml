@@ -35,7 +35,7 @@ build-benchmark:
       - target/*.jar
     expire_in: 20 minutes
 
-package:jdk8:
+package-jdk8:
   <<: *build
   script: "mvn verify `eval $MAVEN_CLI_OPTS`"
   artifacts:
@@ -53,7 +53,7 @@ package:jdk8:
     -Dassembly.skipAssembly=true \
     -Djacoco.skip=true"
   dependencies:
-    - package:jdk8
+    - package-jdk8
 
 test-jre8:
   <<: *test
@@ -120,7 +120,7 @@ coverage-rate:
   image: alpine:3.7
   stage: package
   dependencies:
-    - package:jdk8
+    - package-jdk8
   script:
     - awk -F"," \
       '{
@@ -158,7 +158,7 @@ pages:
   image: alpine:3.7
   stage: deploy
   dependencies:
-    - package:jdk8
+    - package-jdk8
     - benchmark-report
   script:
     - mkdir -p public/coverage

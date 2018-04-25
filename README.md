@@ -8,36 +8,36 @@ LS comes with a default toString strategy that print the origin of the lambdas. 
 
 ## Usage
 
-The most recent release is [LS 0.1](https://gitlab.com/TurpIF/lambda-to-string/tags/v0.1).
+The most recent release is [LS 0.2](https://gitlab.com/TurpIF/lambda-to-string/tags/v0.2).
 
 To activate the LS agent in general, please use the following:
-- Download the [lambdaString-0.1.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8)
-- Add `-javaagent:/path/to/lambdaString-0.1.jar` in your java options
+- Download the [lambda-string-0.2.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.2/raw/target/lambda-string-0.2.jar?job=package-jdk8)
+- Add `-javaagent:/path/to/lambda-string-0.2.jar` in your java options
 
 
 To activate the LS agent using remote debugger, please use the following:
 ```bash
 # Download JAR
-wget -O /tmp/lambdaString-0.1.jar "https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8"
+wget -O /tmp/lambda-string-0.2.jar "https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.2/raw/target/lambda-string-0.2.jar?job=package-jdk8"
 
 # Start debug server
 cd /your/project
-java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -javaagent:/tmp/lambdaString-0.1.jar my.dummy.Main
+java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005 -javaagent:/tmp/lambda-string-0.2.jar my.dummy.Main
 
 # Attach a debugger client with JDB or your preferred IDE
 ```
 
 
 To activate the LS agent using IntelliJ, please use the following:
-- Download the [lambdaString-0.1.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8)
-- Add `-javaagent:/path/to/lambdaString-0.1.jar` in the "VM options" of your debugging configuration
+- Download the [lambda-string-0.2.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.2/raw/target/lambda-string-0.2.jar?job=package-jdk8)
+- Add `-javaagent:/path/to/lambda-string-0.2.jar` in the "VM options" of your debugging configuration
 
 ![Intellij hint](https://gitlab.com/TurpIF/lambda-to-string/raw/master/doc/intellij-usage.png)
 
 
 To activate the LS agent with custom toString strategy, please use the following:
-- Download the [lambdaString-0.1.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8)
-- Add `-javaagent:/path/to/lambdaString-0.1.jar=my.custom.ToStringStrategy` in your java options
+- Download the [lambda-string-0.2.jar](https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.2/raw/target/lambda-string-0.2.jar?job=package-jdk8)
+- Add `-javaagent:/path/to/lambda-string-0.2.jar=my.custom.ToStringStrategy` in your java options
 
 
 ## Why
@@ -132,7 +132,7 @@ a new implementation of the `LambdaToStringStrategy` interface.
 Then the agent setup should give the custom strategy class as below :
 
 ```bash
-java -javaagent:./lambdaString-0.1.jar=my.dummy.MyToStringStrategy my.dummy.Main
+java -javaagent:./lambda-string-0.2.jar=my.dummy.MyToStringStrategy my.dummy.Main
 ```
 
 Here is a sample of custom strategy returning a constant toString :
