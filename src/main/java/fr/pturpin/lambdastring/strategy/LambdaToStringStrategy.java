@@ -4,6 +4,14 @@ import fr.pturpin.lambdastring.transform.LambdaMetaInfo;
 
 /**
  * Factory class generating toString representation for lambdas.
+ *
+ * <p>Implementations should provide a default public constructor. One strategy is created per
+ * linked lambda. This strategy stay constant during the lifetime of the VM. So implementation may
+ * store cached data in the strategy. For shared cached data, implementation should use static
+ * variable as usual.
+ *
+ * <p>For more information about the linkage of a lambda to a strategy, please see {@link
+ * fr.pturpin.lambdastring.transform.LambdaToStringLinker}.
  */
 @FunctionalInterface
 public interface LambdaToStringStrategy {
