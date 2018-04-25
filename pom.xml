@@ -9,7 +9,7 @@
 
     <name>lambda-string</name>
     <description>Lambda-string (LS) is a helping java agent that inject configurable toString method into lambdas with some useful meta-information</description>
-    <url>https://gitlab.com/TurpIF/lambda-to-string</url>
+    <url>https://gitlab.com/TurpIF/lambda-string</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -43,9 +43,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://gitlab.com/TurpIF/lambda-to-string.git</connection>
-        <developerConnection>ssh://git@gitlab.com:TurpIF/lambda-to-string.git</developerConnection>
-        <url>https://gitlab.com/TurpIF/lambda-to-string</url>
+        <connection>scm:git:https://gitlab.com/TurpIF/lambda-string.git</connection>
+        <developerConnection>ssh://git@gitlab.com:TurpIF/lambda-string.git</developerConnection>
+        <url>https://gitlab.com/TurpIF/lambda-string</url>
     </scm>
 
     <dependencies>
