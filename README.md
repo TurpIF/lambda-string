@@ -16,7 +16,7 @@ To activate the LS agent in general, please use the following:
 
 
 To activate the LS agent using remote debugger, please use the following:
-```shell
+```bash
 # Download JAR
 wget -O /tmp/lambdaString-0.1.jar "https://gitlab.com/TurpIF/lambda-to-string/-/jobs/artifacts/v0.1/raw/target/lambdaString-0.1.jar?job=package%3Ajdk8"
 
@@ -82,17 +82,6 @@ In the above sample, the lambda is chosen from a runtime value.
 While debugging, if you put a breakpoint after the generation of the lambda, you can't tell which lambda is returned by the method.
 By activating the LS agent, the lambda origin is available through it's toString evaluation.
 
-## Injecting custom toString
-
-The injected toString is configurable by giving a custom strategy class to the agent:
-
-```shell
-java -javaagent:./lambdaString-0.1.jar=my.dummy.MyToStringStrategy my.dummy.Main
-```
-
-The strategy class should extends the `LambdaToStringStrategy` interface.
-
-TODO Add sample strategy
 
 ## Benchmark
 
@@ -133,6 +122,94 @@ So, there isn't any impact when injecting a strategy that reproduces the same ou
 The `DefaultToStringStrategyComparisonBenchmark` benchmark compares the time spent by the JRE to
 return the original `toString` compared to returning a useful debugging `toString` as shown above.
 The debugging strategy exceed few milliseconds. Although, this stays imperceptible for a human
+
+
+## Customizing injected toString
+
+It is possible to give a custom `toString` strategy to the agent. For this, you should first create
+a new implementation of the `LambdaToStringStrategy` interface.
+
+Then the agent setup should give the custom strategy class as below :
+
+```bash
+java -javaagent:./lambdaString-0.1.jar=my.dummy.MyToStringStrategy my.dummy.Main
+```
+
+Here is a sample of custom strategy returning a constant toString :
+
+```java
+public final class MyToStringStrategy implements LambdaToStringStrategy {
+    @Override
+    public String createToString(Object lambda, LambdaMetaInfo metaInfo) {
+        return "Hello world";
+    }
+}
+```
+
+
+## Contributing
+
+When contributing to this repository, please first discuss the change you wish to make via issue, email, or any other
+method with the owners of this repository before making a change.
+
+### Prerequisites
+
+Installing a development environment needs few requirements:
+- [JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+- [Maven](https://maven.apache.org/)
+- [GitLab Runner](https://docs.gitlab.com/runner/) (for debugging)
+- [Docker](https://www.docker.com/) (for debugging)
+
+### Installation
+
+```bash
+git clone https://gitlab.com/TurpIF/lambda-to-string lambda-to-string
+cd lambda-to-string
+mvn verify
+```
+
+Testing the agent on different JRE is eased with the GitLab Runner and Docker.
+Also, few scripts are available to simulate the gitlab CI pipeline through a shared directory amongst the dockers.
+Available testing JRE tasks are those matching the `test-jre*` pattern in the GitLab CI file.
+
+```bash
+git clone https://gitlab.com/TurpIF/lambda-to-string lambda-to-string
+cd lambda-to-string
+
+# GitLab Runner does not allow running pipeline with shared artifact, so the build-jre8 task should be called
+# once before running any testing task.
+# Task outputs are shared in the /tmp/output directory of the host. 
+
+# Build the agent
+./src/test/shell/build-jdk8.sh
+
+# Test the agent with JRE 9
+./src/test/shell/test-jre.sh test-jre9
+
+# Test with a debugging server listening the port 9000
+./src/test/shell/test-jre.sh test-jre10 9000
+```
+
+Calling those script may fail if your use is not allowed to use the docker socket.
+You should either make this available to your user
+(see [docker docs](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)),
+or run the script with `sudo`.
+
+Running the benchmarks locally is equivalent to execute the tests.
+Available benchmarking JRE tasks are those matching the `benchmark-jre*` pattern in the GitLab CI file.
+
+```bash
+git clone https://gitlab.com/TurpIF/lambda-to-string lambda-to-string
+cd lambda-to-string
+
+# Build the agent and the benchmark JAR
+./src/test/shell/build-jdk8.sh
+./src/test/shell/test-jre.sh build-benchmark
+
+# Benchmark the agent with JRE 10
+./src/test/shell/test-jre.sh benchmark-jre10
+```
+
 
 ## Known issues
 
