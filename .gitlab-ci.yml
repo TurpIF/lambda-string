@@ -42,6 +42,8 @@ package-jdk8:
     paths:
       - target/*.jar
       - target/site/jacoco
+      - target/jacoco.exec
+      - target/surefire-reports
 
 .test: &test
   stage: test
@@ -153,6 +155,24 @@ benchmark-report:
   artifacts:
     paths:
       - benchmark-reports
+
+quality:
+  image: $JDK_AGENT_VERSION
+  stage: test
+  dependencies:
+    - package-jdk8
+  allow_failure: true
+  script:
+    - mvn compile # Sonar needs compile classes
+    - mvn sonar:sonar
+      -Dsonar.organization=turpif-github
+      -Dsonar.host.url=https://sonarcloud.io
+      -Dsonar.login=${SONAR_TOKEN}
+      -Dsonar.junit.reportPaths=target/surefire-reports
+      -Dsonar.jacoco.reportPaths=target/jacoco.exec
+  only:
+    - master
+    - tags
 
 pages:
   image: alpine:3.7
