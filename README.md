@@ -1,4 +1,4 @@
-# lambda-string [![build status](https://gitlab.com/TurpIF/lambda-string/badges/master/build.svg)](https://gitlab.com/TurpIF/lambda-string/commits/master) [![coverage report](https://gitlab.com/TurpIF/lambda-string/badges/master/coverage.svg)](https://turpif.gitlab.io/lambda-string/coverage)
+# lambda-string [![build status](https://gitlab.com/TurpIF/lambda-string/badges/master/build.svg)](https://gitlab.com/TurpIF/lambda-string/commits/master) [![coverage report](https://gitlab.com/TurpIF/lambda-string/badges/master/coverage.svg)](https://turpif.gitlab.io/lambda-string/coverage) [![code quality](https://sonarcloud.io/api/project_badges/measure?project=fr.pturpin.lambdastring%3Alambda-string&metric=alert_status)](https://sonarcloud.io/dashboard?id=fr.pturpin.lambdastring%3Alambda-string)
 
 Lambda-string (LS) is a helping java agent that injects configurable toString method into lambdas with some useful meta-information.
 
