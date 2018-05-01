@@ -1,8 +1,8 @@
 # lambda-string [![build status](https://gitlab.com/TurpIF/lambda-string/badges/master/build.svg)](https://gitlab.com/TurpIF/lambda-string/commits/master) [![coverage report](https://gitlab.com/TurpIF/lambda-string/badges/master/coverage.svg)](https://turpif.gitlab.io/lambda-string/coverage)
 
-Lambda-string (LS) is a helping java agent that inject configurable toString method into lambdas with some useful meta-information.
+Lambda-string (LS) is a helping java agent that injects configurable toString method into lambdas with some useful meta-information.
 
-LS comes with a default toString strategy that print the origin of the lambdas. This feature let you easily track their origin while debugging as shown below :
+LS comes with a default toString strategy that print the origin of the lambdas. This feature lets you easily track their origin while debugging as shown below :
 
 ![With and without the agent](https://gitlab.com/TurpIF/lambda-string/raw/master/doc/with-without.gif)
 
@@ -80,7 +80,7 @@ public class Main {
 
 In the above sample, the lambda is chosen from a runtime value.
 While debugging, if you put a breakpoint after the generation of the lambda, you can't tell which lambda is returned by the method.
-By activating the LS agent, the lambda origin is available through it's toString evaluation.
+By activating the LS agent, the lambda origin is available through its toString evaluation.
 
 
 ## Benchmark
@@ -96,7 +96,7 @@ Although, here is some benchmarks to give you some ideas of the potential impact
 
 To reduce the impacts, a particular attention is done when transforming the lambda runtime representations.
 Also, the majority of the computation is done when `toString` is effectively called.
-This avoids performance cost until a true human interaction.
+This avoids the performance cost until a true human interaction.
 
 The benchmarks are done with JMH on a Gitlab shared agent. So the absolute metrics may be wrong,
 but the important part is the relative comparison with and without the agent.
@@ -104,24 +104,24 @@ but the important part is the relative comparison with and without the agent.
 ### Creation of lambdas
 
 The `LambdaCallSiteGenerationComparisonBenchmark` benchmark compares the time
-the JRE spend generating a class instance (and its constant call site) from a lambda. This is done only once per lambda.
+the JRE spends generating a class instance (and its constant call site) from a lambda. This is done only once per lambda.
 Currently, on the HostSpot JVM 8, the JRE takes roughly **50ns** to generate a lambda call site without the agent
 and **100ns** with. So yes, there is an overhead, but your JRE can still generate **10 000 000** lambdas per seconds
-(and if you have so many lambdas in your code base, I guess that one seconds is not that much compared to the others
+(and if you have so many lambdas in your code base, I guess that one second is not that much compared to the others
 kinds of issues you may have).
 
 ### Cost of strategy call
 
-The `OriginalToStringInjectionComparisonBenchmark` benchmark compares the time the JRE spend returning the
-`Object#toString()` of a lambda. Without agent, the original `toString` is simply called.
-With the agent, a `LambdaToStringStrategy` is setup to return the same. Roughly, both versions take the same time.
+The `OriginalToStringInjectionComparisonBenchmark` benchmark compares the time the JRE spends returning the
+`Object#toString()` of a lambda. Without an agent, the original `toString` is simply called.
+With the agent, a `LambdaToStringStrategy` is installed to reproduce the orignal. Roughly, both versions take the same time.
 So, there isn't any impact when injecting a strategy that reproduces the same output than a real `toString`.
 
 ### Cost of the debugging strategy
 
 The `DefaultToStringStrategyComparisonBenchmark` benchmark compares the time spent by the JRE to
 return the original `toString` compared to returning a useful debugging `toString` as shown above.
-The debugging strategy exceed few milliseconds. Although, this stays imperceptible for a human
+The debugging strategy exceeds few milliseconds. Although, this stays imperceptible for a human
 
 
 ## Customizing injected toString
@@ -135,7 +135,7 @@ Then the agent setup should give the custom strategy class as below :
 java -javaagent:./lambda-string-0.2.jar=my.dummy.MyToStringStrategy my.dummy.Main
 ```
 
-Here is a sample of custom strategy returning a constant toString :
+Here is a sample of custom strategy, returning a constant toString :
 
 ```java
 public final class MyToStringStrategy implements LambdaToStringStrategy {
@@ -190,7 +190,7 @@ cd lambda-string
 ./src/test/shell/test-jre.sh test-jre10 9000
 ```
 
-Calling those script may fail if your use is not allowed to use the docker socket.
+Calling those scripts may fail if your use is not allowed to use the docker socket.
 You should either make this available to your user
 (see [docker docs](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)),
 or run the script with `sudo`.
@@ -215,7 +215,7 @@ cd lambda-string
 
 #### Lambdas loaded during bootstrap are not supported (as `Function.identity()`):
 
-This is because, by default, agents are loaded with the system class loader after the bootstrap one.
+This is because, by default, agents are loaded by the system class loader after the bootstrap one.
 So, already visited lambda have already an abstract class representation. Also, this representation is not
 retransformable and then not injectable.
 
